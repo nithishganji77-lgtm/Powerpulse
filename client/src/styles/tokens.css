@@ -1,0 +1,57 @@
+/*
+ * PowerPulse design tokens. Single source for color, type, spacing and motion.
+ * Colors are space-separated RGB channels so Tailwind can apply alpha (see tailwind.config.ts).
+ */
+:root {
+  /* Brand (landing, light editorial) */
+  --paper: 242 240 233;      /* #F2F0E9 */
+  --ink: 21 23 19;           /* #151713 */
+  --muted: 104 106 97;       /* #686A61 */
+  --accent: 201 242 74;      /* #C9F24A */
+  --warning: 232 163 62;     /* #E8A33E */
+  --critical: 217 74 69;     /* #D94A45 */
+  --steel: 120 151 184;      /* #7897B8 */
+  --healthy: 92 191 120;     /* #5CBF78 */
+  --offline: 128 131 122;    /* #80837A */
+
+  /* Application (dark industrial) */
+  --base: 15 17 14;          /* #0F110E */
+  --panel: 23 26 21;         /* #171A15 */
+  --raised: 31 35 29;        /* #1F231D */
+  --line: 46 51 43;          /* #2E332B */
+  --fg: 236 235 228;         /* #ECEBE4 */
+  --fg-muted: 150 153 141;   /* #96998D */
+
+  /* Typography */
+  --font-display: 'General Sans', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+  --text-display-xl: clamp(3.25rem, 11vw, 11.5rem);
+  --text-display-lg: clamp(2.75rem, 8vw, 8rem);
+  --text-display-md: clamp(2.25rem, 5.5vw, 5.25rem);
+  --text-display-sm: clamp(1.75rem, 3.2vw, 3rem);
+  --text-metric: clamp(2.5rem, 6vw, 5.5rem);
+
+  /* Layout */
+  --layout-content: 1600px;
+  --layout-prose: 38rem;
+  --gutter: clamp(1rem, 3vw, 2.5rem);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 150ms;
+  --dur-base: 300ms;
+  --dur-slow: 700ms;
+
+  /* Focus */
+  --focus-ring: 0 0 0 2px rgb(var(--accent)), 0 0 0 4px rgb(var(--ink));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+  }
+}
