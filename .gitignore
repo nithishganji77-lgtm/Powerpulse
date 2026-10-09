@@ -19,3 +19,4 @@ server/target/
 
 # Claude worktrees
 .claude/worktrees/
+tsconfig.tsbuildinfo
