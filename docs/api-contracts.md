@@ -11,7 +11,7 @@ DTO shapes are defined **once** in `client/src/types/api.ts`, and Java DTOs (rec
    "message":"Request validation failed","path":"/api/v1/transformers",
    "fieldErrors":[{"field":"ratedCapacityKva","message":"must be greater than 0"}]}
   ```
-  Codes: VALIDATION_FAILED (400), BAD_REQUEST (400), UNAUTHORIZED (401), FORBIDDEN (403), NOT_FOUND (404), CONFLICT (409, e.g. duplicate code, illegal state transition, optimistic lock), INTERNAL_ERROR (500).
+  Codes: VALIDATION_FAILED (400), BAD_REQUEST (400), UNAUTHORIZED (401), FORBIDDEN (403), NOT_FOUND (404), CONFLICT (409, e.g. duplicate code, illegal state transition, optimistic lock), TOO_MANY_REQUESTS (429, login throttle: 5 failures per email per 15 min), INTERNAL_ERROR (500).
 - Status codes: 200 OK, 201 Created (POST that creates, with body), 204 No Content (logout, read-all).
 - Mutations require the `X-XSRF-TOKEN` header (see security.md).
 
@@ -86,7 +86,7 @@ Status transitions: PENDING→ASSIGNED (on assignment), ASSIGNED→IN_PROGRESS, 
 ## Admin
 | GET | /admin/users?q&role&page&size | → `PageResponse<UserDto>` | ADMIN |
 | POST | /admin/users | `UserCreateRequest` → 201 `UserDto` | ADMIN |
-| PATCH | /admin/users/{id} | `UserUpdateRequest` (name, role, region, active, password?) → `UserDto` | ADMIN |
+| PATCH | /admin/users/{id} | `UserUpdateRequest` (name, role, region, active, password?; absent region = unchanged, null/blank = all regions; self-demotion/deactivation and removing the last active ADMIN → 409) → `UserDto` | ADMIN |
 | GET | /admin/audit-logs?actor&entityType&action&from&to&page&size | → `PageResponse<AuditLogDto>` | ADMIN |
 
 ## Settings

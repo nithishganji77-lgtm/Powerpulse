@@ -14,7 +14,7 @@
 ## Backend module layout (`server/src/main/java/com/powerpulse/`)
 | Package | Responsibility |
 |---|---|
-| `config` | Mongo auditing/indexes, scheduling, Jackson, OpenAPI, dev seed (`DevDataSeeder`, profile `dev`) |
+| `config` | Mongo auditing/indexes, scheduling, Jackson, OpenAPI, dev seed (`DevUserSeeder` for users and the demo device, `DevDataSeeder` for transformers and readings; profile `dev`) |
 | `common` | `ApiError`, `PageResponse`, exceptions, `GlobalExceptionHandler`, `SchedulerLockService`, `CurrentUser` helper, shared enums |
 | `security`, `auth`, `user` | JWT cookie auth, CSRF, CORS, device-key filter, login/logout/me, user admin |
 | `transformer` | Transformer registry CRUD, list/filter/sort, recommendations |
