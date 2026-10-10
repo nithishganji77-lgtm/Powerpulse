@@ -102,7 +102,7 @@ function NotificationList({ onNavigate }: { onNavigate: () => void }) {
         </ul>
       )}
       <div className="border-t border-line px-3 py-2">
-        <Link to="/notifications" onClick={onNavigate} className="text-xs font-medium text-accent hover:underline">
+        <Link to="/notifications" onClick={onNavigate} className="text-xs font-medium text-accent-ink hover:underline">
           View all notifications →
         </Link>
       </div>

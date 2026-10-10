@@ -100,7 +100,7 @@ function AlertDetailBody({ alert }: { alert: AlertDto }) {
             {
               label: 'Transformer',
               value: (
-                <Link to={links.transformer(alert.transformerId)} className="text-accent hover:underline">
+                <Link to={links.transformer(alert.transformerId)} className="text-accent-ink hover:underline">
                   {alert.transformerCode}
                 </Link>
               ),
@@ -213,7 +213,7 @@ function AlertDetailBody({ alert }: { alert: AlertDto }) {
           <ul className="flex flex-wrap gap-2">
             {alert.maintenanceIds.map((id) => (
               <li key={id}>
-                <Link to={links.maintenance(id)} className="font-mono text-xs text-accent hover:underline">
+                <Link to={links.maintenance(id)} className="font-mono text-xs text-accent-ink hover:underline">
                   Task {shortId(id)}
                 </Link>
               </li>

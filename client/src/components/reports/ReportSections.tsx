@@ -193,7 +193,7 @@ const healthColumns: Column<TransformerHealthReportRow>[] = [
     rowHeader: true,
     cell: (r) => (
       <span className="flex flex-col">
-        <Link to={links.transformer(r.transformerId)} className="font-mono text-xs text-accent hover:underline">
+        <Link to={links.transformer(r.transformerId)} className="font-mono text-xs text-accent-ink hover:underline">
           {r.code}
         </Link>
         <span className="text-[0.7rem] text-fg-muted">
@@ -259,7 +259,7 @@ const downtimeColumns: Column<DowntimeRow>[] = [
     header: 'Transformer',
     rowHeader: true,
     cell: (r) => (
-      <Link to={links.transformer(r.transformerId)} className="font-mono text-xs text-accent hover:underline">
+      <Link to={links.transformer(r.transformerId)} className="font-mono text-xs text-accent-ink hover:underline">
         {r.code}
       </Link>
     ),

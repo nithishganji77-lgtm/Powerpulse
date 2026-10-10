@@ -144,7 +144,7 @@ export function MaintenanceCreateDialog(props: MaintenanceCreateDialogProps) {
             </Select>
           </Field>
           <Field label="Due" required error={errors.dueDate?.message}>
-            <Input type="datetime-local" className="[color-scheme:dark]" {...register('dueDate')} />
+            <Input type="datetime-local" className="[color-scheme:light]" {...register('dueDate')} />
           </Field>
         </div>
         <Field

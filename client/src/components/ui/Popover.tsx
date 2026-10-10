@@ -51,7 +51,7 @@ export function Popover({ trigger, children, align = 'right', className, label }
           role="dialog"
           aria-label={label}
           className={clsx(
-            'absolute top-full z-40 mt-2 rounded-sm border border-line bg-panel text-fg shadow-2xl',
+            'absolute top-full z-40 mt-2 rounded-sm border border-line bg-panel text-fg shadow-overlay',
             align === 'right' ? 'right-0' : 'left-0',
             className,
           )}

@@ -120,7 +120,7 @@ function TaskBody({ task }: { task: MaintenanceDto }) {
             {
               label: 'Transformer',
               value: (
-                <Link to={links.transformer(task.transformerId)} className="text-accent hover:underline">
+                <Link to={links.transformer(task.transformerId)} className="text-accent-ink hover:underline">
                   {task.transformerCode} · {task.transformerName}
                 </Link>
               ),
@@ -140,7 +140,7 @@ function TaskBody({ task }: { task: MaintenanceDto }) {
             {
               label: 'Related alert',
               value: task.alertId ? (
-                <Link to={links.alert(task.alertId)} className="font-mono text-xs text-accent hover:underline">
+                <Link to={links.alert(task.alertId)} className="font-mono text-xs text-accent-ink hover:underline">
                   Alert {shortId(task.alertId)}
                 </Link>
               ) : (
@@ -250,7 +250,7 @@ function TaskBody({ task }: { task: MaintenanceDto }) {
               }}
             >
               <Field label="Due date" className="flex-1" error={due && !dueIso ? 'Enter a valid date and time' : undefined}>
-                <Input type="datetime-local" className="[color-scheme:dark]" value={due} onChange={(e) => setDue(e.target.value)} />
+                <Input type="datetime-local" className="[color-scheme:light]" value={due} onChange={(e) => setDue(e.target.value)} />
               </Field>
               <Button
                 type="submit"
@@ -302,7 +302,7 @@ function TaskBody({ task }: { task: MaintenanceDto }) {
             {[...task.workNotes]
               .sort((a, b) => a.at.localeCompare(b.at))
               .map((n, i) => (
-                <li key={`${n.at}-${i}`} className="rounded-sm border border-line bg-base/50 px-3 py-2">
+                <li key={`${n.at}-${i}`} className="rounded-sm border border-line bg-canvas/50 px-3 py-2">
                   <p className="whitespace-pre-wrap text-sm text-fg">{n.text}</p>
                   <p className="mt-1 font-mono text-[0.7rem] text-fg-muted">
                     {n.authorName} · <time dateTime={n.at}>{formatDateTime(n.at)}</time>

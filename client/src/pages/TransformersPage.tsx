@@ -104,7 +104,7 @@ export default function TransformersPage() {
       sortable: true,
       rowHeader: true,
       cell: (t) => (
-        <Link to={links.transformer(t.id)} className="font-mono text-xs text-accent hover:underline">
+        <Link to={links.transformer(t.id)} className="font-mono text-xs text-accent-ink hover:underline">
           {t.code}
         </Link>
       ),

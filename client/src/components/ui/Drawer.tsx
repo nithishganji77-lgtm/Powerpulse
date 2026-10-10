@@ -26,7 +26,7 @@ export function Drawer({ open, onClose, title, hideTitle, side = 'right', widthC
   if (!open) return null;
   return createPortal(
     <div className="fixed inset-0 z-50">
-      <div aria-hidden="true" className="absolute inset-0 bg-base/70" onClick={onClose} />
+      <div aria-hidden="true" className="absolute inset-0 bg-canvas/70" onClick={onClose} />
       <div
         ref={ref}
         role="dialog"
@@ -34,7 +34,7 @@ export function Drawer({ open, onClose, title, hideTitle, side = 'right', widthC
         aria-labelledby={titleId}
         tabIndex={-1}
         className={clsx(
-          'absolute inset-y-0 flex flex-col border-line bg-panel text-fg shadow-2xl',
+          'absolute inset-y-0 flex flex-col border-line bg-panel text-fg shadow-overlay',
           side === 'right' ? 'right-0 border-l' : 'left-0 border-r',
           widthClass ?? 'w-[min(28rem,100vw)]',
         )}

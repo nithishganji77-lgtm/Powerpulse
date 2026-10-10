@@ -10,7 +10,7 @@ export default function NotFoundPage() {
   return (
     <main
       id="main-content"
-      className="flex min-h-screen flex-col items-center justify-center gap-4 bg-base px-6 text-center text-fg [color-scheme:dark]"
+      className="flex min-h-screen flex-col items-center justify-center gap-4 bg-canvas px-6 text-center text-fg [color-scheme:light]"
     >
       <p className="font-mono text-label uppercase text-fg-muted">404 · No signal</p>
       <h1 className="font-display text-display-sm font-semibold tracking-tight">This page isn’t on the grid.</h1>

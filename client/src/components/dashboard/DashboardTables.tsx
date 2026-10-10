@@ -20,7 +20,7 @@ import { faultTypeLabel } from '@/utils/labels';
 import { formatDate, formatPct, formatRelative, formatTemp } from '@/utils/format';
 import { links } from '@/utils/links';
 
-const linkCls = 'font-mono text-xs text-accent hover:underline';
+const linkCls = 'font-mono text-xs text-accent-ink hover:underline';
 
 export function RecentAlertsTable({ rows }: { rows: IncidentSummary[] }) {
   const columns: Column<IncidentSummary>[] = [
@@ -56,7 +56,7 @@ export function RecentAlertsTable({ rows }: { rows: IncidentSummary[] }) {
     },
   ];
   return (
-    <Panel title="Recent alerts" flush actions={<Link to="/alerts" className="text-xs text-accent hover:underline">All alerts →</Link>}>
+    <Panel title="Recent alerts" flush actions={<Link to="/alerts" className="text-xs text-accent-ink hover:underline">All alerts →</Link>}>
       <Table
         caption="Most recent alerts"
         columns={columns}
@@ -108,7 +108,7 @@ export function PendingMaintenanceTable({ rows }: { rows: MaintenanceSummary[] }
     <Panel
       title="Pending maintenance"
       flush
-      actions={<Link to="/maintenance" className="text-xs text-accent hover:underline">All tasks →</Link>}
+      actions={<Link to="/maintenance" className="text-xs text-accent-ink hover:underline">All tasks →</Link>}
     >
       <Table
         caption="Pending and recent maintenance tasks"
@@ -169,7 +169,7 @@ export function TransformerStatusTable({ filters }: { filters: DashboardFilters 
       title="Transformer status"
       description="Live fleet view. Sort any column; select a row for details."
       flush
-      actions={<Link to="/transformers" className="text-xs text-accent hover:underline">Registry →</Link>}
+      actions={<Link to="/transformers" className="text-xs text-accent-ink hover:underline">Registry →</Link>}
     >
       <QueryState query={all} loading={<LoadingBlock className="p-4" lines={6} label="Loading transformers" />}>
         {() => (

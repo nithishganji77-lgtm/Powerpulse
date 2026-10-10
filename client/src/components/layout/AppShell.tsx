@@ -8,7 +8,7 @@ import { ToastProvider } from '@/components/ui/Toast';
 import { Drawer } from '@/components/ui/Drawer';
 import { IconButton } from '@/components/ui/IconButton';
 import { links } from '@/utils/links';
-import { NAV_ITEMS, titleForPath } from './navItems';
+import { NAV_GROUPS, NAV_ITEMS, groupForPath, titleForPath } from './navItems';
 import { GlobalSearch } from './GlobalSearch';
 import { NotificationBell } from './NotificationBell';
 import { UserMenu } from './UserMenu';
@@ -40,32 +40,53 @@ function NavList({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate?: 
   const { hasRole } = useAuth();
   const items = NAV_ITEMS.filter((n) => !n.roles || hasRole(...n.roles));
   return (
-    <ul className="flex flex-col gap-0.5">
-      {items.map(({ to, label, Icon }) => (
-        <li key={to}>
-          <NavLink
-            to={to}
-            onClick={onNavigate}
-            title={collapsed ? label : undefined}
-            className={({ isActive }) =>
-              clsx(
-                'relative flex h-9 items-center gap-3 rounded-sm px-2.5 text-sm transition-colors duration-fast',
-                isActive ? 'bg-raised text-fg' : 'text-fg-muted hover:bg-raised/60 hover:text-fg',
-                collapsed && 'justify-center px-0',
-              )
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {isActive && <span aria-hidden="true" className="absolute inset-y-1.5 left-0 w-0.5 bg-accent" />}
-                <Icon aria-hidden="true" className={clsx('h-4 w-4 shrink-0', isActive && 'text-accent')} />
-                <span className={clsx(collapsed && 'sr-only')}>{label}</span>
-              </>
-            )}
-          </NavLink>
-        </li>
-      ))}
-    </ul>
+    <div className="flex flex-col gap-4">
+      {NAV_GROUPS.map((group) => {
+        const groupItems = items.filter((n) => n.group === group);
+        if (groupItems.length === 0) return null;
+        return (
+          <div key={group}>
+            <p
+              className={clsx(
+                'mb-1 px-2.5 font-mono text-[0.625rem] uppercase tracking-[0.12em] text-fg-muted',
+                collapsed && 'sr-only',
+              )}
+            >
+              {group}
+            </p>
+            <ul className="flex flex-col gap-px">
+              {groupItems.map(({ to, label, Icon }) => (
+                <li key={to}>
+                  <NavLink
+                    to={to}
+                    onClick={onNavigate}
+                    title={collapsed ? label : undefined}
+                    className={({ isActive }) =>
+                      clsx(
+                        'relative flex h-8 items-center gap-2.5 rounded-sm px-2.5 text-[0.8125rem] transition-colors duration-fast',
+                        isActive
+                          ? 'bg-canvas font-medium text-fg shadow-[inset_0_0_0_1px_rgb(var(--line))]'
+                          : 'text-fg-muted hover:bg-raised/60 hover:text-fg',
+                        collapsed && 'justify-center px-0',
+                      )
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        {/* Active marker: lime rail + surface + weight, so state is never color-only. */}
+                        {isActive && <span aria-hidden="true" className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-sm bg-accent" />}
+                        <Icon aria-hidden="true" className={clsx('h-4 w-4 shrink-0', isActive ? 'text-fg' : 'text-fg-muted')} />
+                        <span className={clsx(collapsed && 'sr-only')}>{label}</span>
+                      </>
+                    )}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -95,6 +116,7 @@ export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
   const title = titleForPath(pathname);
+  const group = groupForPath(pathname);
 
   useEffect(() => {
     document.title = `${title} · PowerPulse`;
@@ -117,7 +139,7 @@ export function AppShell() {
 
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-base font-sans text-fg [color-scheme:dark]">
+      <div className="min-h-screen bg-canvas font-sans text-fg [color-scheme:light]">
         <a
           href="#main-content"
           className="sr-only z-[70] rounded-sm bg-accent px-3 py-2 text-sm font-medium text-ink focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
@@ -159,7 +181,7 @@ export function AppShell() {
         </Drawer>
 
         <div className={clsx('flex min-h-screen min-w-0 flex-col transition-[padding] duration-base ease-out', collapsed ? 'md:pl-14' : 'md:pl-56')}>
-          <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-line bg-base/95 px-3 backdrop-blur sm:gap-3 sm:px-5">
+          <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-line bg-canvas/90 px-3 backdrop-blur sm:gap-3 sm:px-5">
             <IconButton
               label="Open navigation"
               icon={<Menu />}
@@ -167,7 +189,19 @@ export function AppShell() {
               onClick={() => setMobileOpen(true)}
               aria-expanded={mobileOpen}
             />
-            <p className="hidden min-w-0 truncate font-display text-sm font-semibold tracking-tight sm:block">{title}</p>
+            <nav aria-label="Breadcrumb" className="hidden min-w-0 sm:block">
+              <ol className="flex items-center gap-1.5 truncate text-sm">
+                {group && (
+                  <li className="flex items-center gap-1.5 font-mono text-label uppercase text-fg-muted">
+                    {group}
+                    <span aria-hidden="true" className="text-line-strong">/</span>
+                  </li>
+                )}
+                <li aria-current="page" className="truncate font-display font-semibold tracking-tight text-fg">
+                  {title}
+                </li>
+              </ol>
+            </nav>
             <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-1.5 sm:gap-2">
               <GlobalSearch className="w-full max-w-xs" />
               <SimulatedIndicator />
@@ -175,7 +209,7 @@ export function AppShell() {
               <UserMenu />
             </div>
           </header>
-          <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 px-3 py-4 outline-none sm:px-5 sm:py-6">
+          <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 px-4 py-5 outline-none sm:px-6 sm:py-6 xl:px-8">
             <Outlet />
           </main>
         </div>

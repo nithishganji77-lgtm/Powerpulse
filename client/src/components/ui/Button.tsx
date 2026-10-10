@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 import { Spinner } from './Spinner';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'accent' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const base =
@@ -12,10 +12,12 @@ const base =
   'transition-colors duration-fast ease-out disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50';
 
 const variants: Record<ButtonVariant, string> = {
-  primary: 'bg-accent text-ink hover:bg-accent/85 active:bg-accent/75',
-  secondary: 'border border-line bg-raised text-fg hover:border-fg-muted/60 hover:bg-raised/70',
+  primary: 'bg-ink text-paper hover:bg-ink/85 active:bg-ink/75',
+  // Brand emphasis — use sparingly (one per view at most).
+  accent: 'bg-accent text-ink hover:bg-accent/85 active:bg-accent/75',
+  secondary: 'border border-line bg-panel text-fg hover:border-line-strong hover:bg-raised/60',
   ghost: 'text-fg-muted hover:bg-raised hover:text-fg',
-  danger: 'border border-critical/60 bg-critical/10 text-critical hover:bg-critical/20',
+  danger: 'border border-critical/50 bg-critical-bg text-critical hover:border-critical hover:bg-critical/15',
 };
 
 const sizes: Record<ButtonSize, string> = {
@@ -61,7 +63,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, Om
 
 /**
  * Primary action control. `loading` disables the button, shows a spinner and sets aria-busy.
- * Variants: primary (accent, one per view), secondary, ghost, danger.
+ * Variants: primary (near-black), accent (lime, sparing), secondary, ghost, danger.
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   { variant, size, block, className, loading, icon, arrow, disabled, children, type = 'button', ...rest },

@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 import clsx from 'clsx';
 
-/** Dark-theme chart tokens (read from CSS variables so they follow tokens.css). */
+/** Chart tokens (read from CSS variables so they follow tokens.css). */
 export const chartTheme = {
   grid: 'rgb(var(--line))',
   axis: 'rgb(var(--fg-muted))',
   text: 'rgb(var(--fg-muted))',
-  tooltipBg: 'rgb(var(--raised))',
+  tooltipBg: 'rgb(var(--panel))',
   tooltipBorder: 'rgb(var(--line))',
   fontFamily: 'var(--font-mono)',
   fontSize: 11,
@@ -17,9 +17,18 @@ export const chartTheme = {
  * (healthy/warning/critical/offline) are reserved for status and thresholds.
  */
 export const seriesColors = {
-  primary: 'rgb(var(--steel))',
-  secondary: 'rgb(var(--accent))',
-  tertiary: 'rgb(var(--fg))',
+  primary: 'rgb(var(--chart-temp))',
+  secondary: 'rgb(var(--chart-load))',
+  tertiary: 'rgb(var(--chart-secondary))',
+  neutral: 'rgb(var(--chart-neutral))',
+} as const;
+
+/** Metric-bound colors: the same metric always uses the same color across every page. */
+export const metricColors = {
+  temperature: 'rgb(var(--chart-temp))',
+  load: 'rgb(var(--chart-load))',
+  secondary: 'rgb(var(--chart-secondary))',
+  neutral: 'rgb(var(--chart-neutral))',
 } as const;
 
 export const axisProps = {
@@ -63,7 +72,7 @@ export function ChartLegend({ items, className }: { items: LegendItem[]; classNa
 /** Tooltip shell used by all charts. */
 export function TooltipCard({ title, rows }: { title: ReactNode; rows: { label: string; value: string; color?: string; dashed?: boolean }[] }) {
   return (
-    <div className="min-w-[10rem] rounded-sm border border-line bg-raised px-3 py-2 text-xs text-fg shadow-xl">
+    <div className="min-w-[10rem] rounded-sm border border-line bg-panel px-3 py-2 text-xs text-fg shadow-overlay">
       <p className="mb-1 font-mono text-label uppercase text-fg-muted">{title}</p>
       <ul className="space-y-0.5">
         {rows.map((r) => (

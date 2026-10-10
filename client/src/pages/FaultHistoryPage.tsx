@@ -72,7 +72,7 @@ export default function FaultHistoryPage() {
       rowHeader: true,
       cell: (i) => (
         <span className="flex flex-col">
-          <Link to={links.transformer(i.transformerId)} className="font-mono text-xs text-accent hover:underline">
+          <Link to={links.transformer(i.transformerId)} className="font-mono text-xs text-accent-ink hover:underline">
             {i.transformerCode}
           </Link>
           <span className="text-[0.7rem] text-fg-muted">{i.location}</span>

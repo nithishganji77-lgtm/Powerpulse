@@ -56,7 +56,7 @@ export function IncidentDetailDrawer({ focusId, incident, onClose }: IncidentDet
                 {
                   label: 'Transformer',
                   value: (
-                    <Link to={links.transformer(incident.transformerId)} className="text-accent hover:underline">
+                    <Link to={links.transformer(incident.transformerId)} className="text-accent-ink hover:underline">
                       {incident.transformerCode}
                     </Link>
                   ),
@@ -69,7 +69,7 @@ export function IncidentDetailDrawer({ focusId, incident, onClose }: IncidentDet
                 {
                   label: 'Alert',
                   value: (
-                    <Link to={links.alert(incident.alertId)} className="font-mono text-xs text-accent hover:underline">
+                    <Link to={links.alert(incident.alertId)} className="font-mono text-xs text-accent-ink hover:underline">
                       Alert {shortId(incident.alertId)}
                     </Link>
                   ),
@@ -82,7 +82,7 @@ export function IncidentDetailDrawer({ focusId, incident, onClose }: IncidentDet
                     ) : (
                       <span className="flex flex-wrap gap-2">
                         {incident.maintenanceIds.map((id) => (
-                          <Link key={id} to={links.maintenance(id)} className="font-mono text-xs text-accent hover:underline">
+                          <Link key={id} to={links.maintenance(id)} className="font-mono text-xs text-accent-ink hover:underline">
                             Task {shortId(id)}
                           </Link>
                         ))}

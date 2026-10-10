@@ -48,7 +48,7 @@ export function UserMenu() {
           <div className="border-b border-line px-3 py-3">
             <p className="text-sm text-fg">{user.name}</p>
             <p className="truncate text-xs text-fg-muted">{user.email}</p>
-            <p className="mt-1.5 font-mono text-label uppercase text-accent">
+            <p className="mt-1.5 font-mono text-label uppercase text-accent-ink">
               {roleLabel[user.role]}
               {user.region ? ` · ${user.region}` : ''}
             </p>

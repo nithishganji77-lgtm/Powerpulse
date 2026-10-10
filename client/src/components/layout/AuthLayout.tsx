@@ -28,7 +28,7 @@ export function AuthLayout({ aside, children }: { aside?: ReactNode; children: R
           Monitoring · Fault detection · Maintenance
         </p>
       </div>
-      <div className="flex items-center justify-center bg-base px-5 py-10 text-fg [color-scheme:dark] sm:px-10">
+      <div className="flex items-center justify-center bg-canvas px-5 py-10 text-fg [color-scheme:light] sm:px-10">
         <main id="main-content" className="w-full max-w-sm">
           {children}
         </main>

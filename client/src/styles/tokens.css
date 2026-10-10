@@ -8,19 +8,33 @@
   --ink: 21 23 19;           /* #151713 */
   --muted: 104 106 97;       /* #686A61 */
   --accent: 201 242 74;      /* #C9F24A */
-  --warning: 232 163 62;     /* #E8A33E */
-  --critical: 217 74 69;     /* #D94A45 */
-  --steel: 120 151 184;      /* #7897B8 */
-  --healthy: 92 191 120;     /* #5CBF78 */
-  --offline: 128 131 122;    /* #80837A */
+  /* Semantic status — tuned for AA text contrast on the light surfaces. Never color-only. */
+  --warning: 169 107 23;     /* #A96B17 */
+  --critical: 200 61 55;     /* #C83D37 */
+  --healthy: 39 131 91;      /* #27835B */
+  --offline: 110 112 104;    /* #6E7068 */
+  --healthy-bg: 229 242 232; /* #E5F2E8 */
+  --warning-bg: 247 235 210; /* #F7EBD2 */
+  --critical-bg: 247 228 224;/* #F7E4E0 */
+  --offline-bg: 232 231 224; /* #E8E7E0 */
+  /* Accent text/marks on light surfaces (lime itself is a fill, never text). */
+  --accent-ink: 77 100 16;   /* #4D6410 */
 
-  /* Application (dark industrial) */
-  --base: 15 17 14;          /* #0F110E */
-  --panel: 23 26 21;         /* #171A15 */
-  --raised: 31 35 29;        /* #1F231D */
-  --line: 46 51 43;          /* #2E332B */
-  --fg: 236 235 228;         /* #ECEBE4 */
-  --fg-muted: 150 153 141;   /* #96998D */
+  /* Application surfaces (light, shared with the landing page's warm neutrals) */
+  --canvas: 242 240 233;     /* #F2F0E9 page */
+  --panel: 248 247 242;      /* #F8F7F2 surface */
+  --raised: 234 232 224;     /* #EAE8E0 surface-muted */
+  --line: 215 213 204;       /* #D7D5CC border */
+  --line-strong: 184 183 173;/* #B8B7AD */
+  --fg: 23 24 20;            /* #171814 text */
+  --fg-muted: 102 103 95;    /* #66675F secondary text */
+  --fg-subtle: 133 134 125;  /* #85867D large/decorative only */
+
+  /* Chart series */
+  --chart-temp: 87 127 176;  /* #577FB0 */
+  --chart-load: 120 152 36;  /* #789824 — darker than #9ABF37 for line contrast on light */
+  --chart-secondary: 139 122 184; /* #8B7AB8 */
+  --chart-neutral: 137 139 131;   /* #898B83 */
 
   /* Typography
    * Display: General Sans 600 — size-led hierarchy, solid leading, negative tracking.

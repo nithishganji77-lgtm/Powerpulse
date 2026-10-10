@@ -28,7 +28,7 @@ class SceneErrorBoundary extends Component<{ onError: () => void; children: Reac
 
 function Overlay({ children }: { children: ReactNode }) {
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center bg-base/70" role="status" aria-live="polite">
+    <div className="absolute inset-0 z-10 flex items-center justify-center bg-canvas/70" role="status" aria-live="polite">
       <span className="inline-flex items-center gap-2 font-mono text-label uppercase text-fg-muted">
         <Loader2 size={14} className="motion-safe:animate-spin" aria-hidden="true" />
         {children}
@@ -144,7 +144,7 @@ export default function GridPage() {
       <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center">
         <p className="font-mono text-label uppercase text-fg-muted">No transformers</p>
         <p className="max-w-sm text-sm text-fg">No transformers are registered yet, so there is no network to draw.</p>
-        <Link to="/transformers" className="font-mono text-label uppercase text-accent underline-offset-4 hover:underline">
+        <Link to="/transformers" className="font-mono text-label uppercase text-accent-ink underline-offset-4 hover:underline">
           Go to the registry
         </Link>
       </div>
@@ -235,7 +235,7 @@ export default function GridPage() {
       )}
 
       <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="relative h-[60vh] min-h-[420px] overflow-hidden rounded border border-line bg-base lg:h-auto lg:min-h-0">
+        <div className="relative h-[60vh] min-h-[420px] overflow-hidden rounded border border-line bg-canvas lg:h-auto lg:min-h-0">
           {viewport}
           {hasData && (
             <GridLegend className="pointer-events-none absolute bottom-2 left-2 right-2 sm:right-auto" />

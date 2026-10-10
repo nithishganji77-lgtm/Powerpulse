@@ -49,7 +49,7 @@ export function Field({ label, error, hint, required, id, className, hideLabel, 
         >
           {label}
           {required && (
-            <span aria-hidden="true" className="ml-1 text-accent">
+            <span aria-hidden="true" className="ml-1 text-accent-ink">
               *
             </span>
           )}

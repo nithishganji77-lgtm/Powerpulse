@@ -78,7 +78,7 @@ export default function AlertsPage() {
       rowHeader: true,
       cell: (a) => (
         <span className="flex flex-col">
-          <Link to={links.transformer(a.transformerId)} className="font-mono text-xs text-accent hover:underline">
+          <Link to={links.transformer(a.transformerId)} className="font-mono text-xs text-accent-ink hover:underline">
             {a.transformerCode}
           </Link>
           <span className="text-[0.7rem] text-fg-muted">{a.location}</span>

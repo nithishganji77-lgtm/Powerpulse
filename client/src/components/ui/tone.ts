@@ -4,7 +4,7 @@ export type Tone = 'neutral' | 'accent' | 'healthy' | 'warning' | 'critical' | '
 /** Text color class per tone. */
 export const toneText: Record<Tone, string> = {
   neutral: 'text-fg',
-  accent: 'text-accent',
+  accent: 'text-accent-ink',
   healthy: 'text-healthy',
   warning: 'text-warning',
   critical: 'text-critical',
@@ -26,12 +26,12 @@ export const toneBg: Record<Tone, string> = {
 /** Hairline-bordered, tinted chip styling per tone. */
 export const toneChip: Record<Tone, string> = {
   neutral: 'border-line bg-raised text-fg-muted',
-  accent: 'border-accent/40 bg-accent/10 text-accent',
-  healthy: 'border-healthy/40 bg-healthy/10 text-healthy',
-  warning: 'border-warning/40 bg-warning/10 text-warning',
-  critical: 'border-critical/50 bg-critical/10 text-critical',
-  offline: 'border-offline/40 bg-offline/10 text-offline',
-  steel: 'border-steel/40 bg-steel/10 text-steel',
+  accent: 'border-accent-ink/30 bg-accent/30 text-accent-ink',
+  healthy: 'border-healthy/30 bg-healthy-bg text-healthy',
+  warning: 'border-warning/30 bg-warning-bg text-warning',
+  critical: 'border-critical/35 bg-critical-bg text-critical',
+  offline: 'border-offline/30 bg-offline-bg text-offline',
+  steel: 'border-steel/35 bg-steel/10 text-steel',
 };
 
 /** CSS rgb() color per tone, for SVG/charts (reads the design tokens). */

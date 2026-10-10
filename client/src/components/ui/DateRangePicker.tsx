@@ -64,7 +64,7 @@ export function DateRangePicker({
   return (
     <fieldset className={clsx('flex min-w-0 flex-wrap items-center gap-2', className)}>
       <legend className="sr-only">{label}</legend>
-      <div className="flex items-center gap-0.5 rounded-sm border border-line bg-base p-0.5" role="group" aria-label="Range presets">
+      <div className="flex items-center gap-0.5 rounded-sm border border-line bg-canvas p-0.5" role="group" aria-label="Range presets">
         {allowClear && (
           <button type="button" aria-pressed={none} className={chip(none)} onClick={() => onChange({})}>
             All
@@ -93,7 +93,7 @@ export function DateRangePicker({
             value={toLocalInput(value.from)}
             max={toLocalInput(value.to) || undefined}
             onChange={(e) => onChange({ ...value, from: fromLocalInput(e.target.value) })}
-            className="h-8 min-w-0 rounded-sm border border-line bg-base px-2 font-mono text-xs text-fg [color-scheme:dark]"
+            className="h-8 min-w-0 rounded-sm border border-line bg-canvas px-2 font-mono text-xs text-fg [color-scheme:light]"
           />
           <span aria-hidden="true" className="text-fg-muted">
             →
@@ -107,7 +107,7 @@ export function DateRangePicker({
             value={toLocalInput(value.to)}
             min={toLocalInput(value.from) || undefined}
             onChange={(e) => onChange({ ...value, to: fromLocalInput(e.target.value) })}
-            className="h-8 min-w-0 rounded-sm border border-line bg-base px-2 font-mono text-xs text-fg [color-scheme:dark]"
+            className="h-8 min-w-0 rounded-sm border border-line bg-canvas px-2 font-mono text-xs text-fg [color-scheme:light]"
           />
         </div>
       )}

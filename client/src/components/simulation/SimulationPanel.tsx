@@ -64,7 +64,7 @@ function ActiveScenarios({ status }: { status: SimulationStatus }) {
         <ul className="mt-1.5 flex flex-col gap-1">
           {status.scenarios.map((s) => (
             <li key={`${s.transformerId}-${s.name}`} className="flex flex-wrap items-center gap-2 text-sm">
-              <Link to={links.transformer(s.transformerId)} className="font-mono text-xs text-accent hover:underline">
+              <Link to={links.transformer(s.transformerId)} className="font-mono text-xs text-accent-ink hover:underline">
                 {s.transformerCode}
               </Link>
               <span className="text-fg">{scenarioLabel[s.name] ?? s.name}</span>

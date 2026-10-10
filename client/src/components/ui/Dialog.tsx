@@ -44,7 +44,7 @@ export function Dialog({
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-base/80 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-canvas/80 backdrop-blur-[2px]"
         onClick={() => dismissible && onClose()}
       />
       <div
@@ -55,7 +55,7 @@ export function Dialog({
         aria-describedby={description ? descId : undefined}
         tabIndex={-1}
         className={clsx(
-          'relative flex max-h-[92dvh] w-full flex-col rounded-t-md border border-line bg-panel text-fg shadow-2xl sm:rounded-md',
+          'relative flex max-h-[92dvh] w-full flex-col rounded-t-md border border-line bg-panel text-fg shadow-overlay sm:rounded-md',
           widths[size],
         )}
       >

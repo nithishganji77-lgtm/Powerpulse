@@ -116,7 +116,7 @@ function RatedSpecs({ t }: { t: TransformerDetailDto }) {
 function ActiveAlerts({ id }: { id: string }) {
   const alerts = useTransformerAlerts(id, { active: true });
   return (
-    <Panel title="Active alerts" actions={<Link to={links.alertsForTransformer(id)} className="text-xs text-accent hover:underline">All alerts →</Link>}>
+    <Panel title="Active alerts" actions={<Link to={links.alertsForTransformer(id)} className="text-xs text-accent-ink hover:underline">All alerts →</Link>}>
       <QueryState
         query={alerts}
         isEmpty={(d: AlertDto[]) => d.length === 0}
@@ -162,7 +162,7 @@ function Recommendations({ t }: { t: TransformerDetailDto }) {
         <ol className="flex flex-col gap-3">
           {t.recommendations.map((r, i) => (
             <li key={`${r.title}-${i}`} className="flex gap-3">
-              <span className="tabular mt-0.5 font-mono text-xs text-accent">{String(i + 1).padStart(2, '0')}</span>
+              <span className="tabular mt-0.5 font-mono text-xs text-accent-ink">{String(i + 1).padStart(2, '0')}</span>
               <div>
                 <p className="text-sm text-fg">
                   {r.title}
@@ -199,7 +199,7 @@ function PreviousFaults({ id }: { id: string }) {
     },
   ];
   return (
-    <Panel title="Previous faults" flush actions={<Link to={`/fault-history?transformerId=${id}`} className="text-xs text-accent hover:underline">Fault history →</Link>}>
+    <Panel title="Previous faults" flush actions={<Link to={`/fault-history?transformerId=${id}`} className="text-xs text-accent-ink hover:underline">Fault history →</Link>}>
       <QueryState query={incidents} loading={<LoadingBlock className="p-4" />}>
         {(data) => (
           <Table

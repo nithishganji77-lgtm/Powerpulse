@@ -35,7 +35,7 @@ const columns: Column<AuditLogDto>[] = [
       if (!a.entityId) return <span className="text-fg-muted">—</span>;
       const href = linkForResource(a.entityType, a.entityId);
       return href ? (
-        <Link to={href} className="font-mono text-xs text-accent hover:underline">
+        <Link to={href} className="font-mono text-xs text-accent-ink hover:underline">
           {a.entityId}
         </Link>
       ) : (

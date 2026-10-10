@@ -57,7 +57,7 @@ function ToastView({ item, onDismiss: dismissId }: { item: ToastItem; onDismiss:
   return (
     <li
       className={clsx(
-        'pointer-events-auto flex w-full items-start gap-3 rounded-sm border border-line bg-raised px-3 py-2.5 text-fg shadow-xl',
+        'pointer-events-auto flex w-full items-start gap-3 rounded-sm border border-line bg-panel px-3 py-2.5 text-fg shadow-overlay',
         item.tone === 'error' && 'border-critical/50',
       )}
     >

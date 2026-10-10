@@ -83,7 +83,7 @@ export default function MaintenancePage() {
       header: 'Transformer',
       cell: (t) => (
         <span className="flex flex-col">
-          <Link to={links.transformer(t.transformerId)} className="font-mono text-xs text-accent hover:underline">
+          <Link to={links.transformer(t.transformerId)} className="font-mono text-xs text-accent-ink hover:underline">
             {t.transformerCode}
           </Link>
           <span className="text-[0.7rem] text-fg-muted">{t.location}</span>
@@ -109,7 +109,7 @@ export default function MaintenancePage() {
       header: 'Alert',
       cell: (t) =>
         t.alertId ? (
-          <Link to={links.alert(t.alertId)} className="font-mono text-xs text-accent hover:underline">
+          <Link to={links.alert(t.alertId)} className="font-mono text-xs text-accent-ink hover:underline">
             View alert
           </Link>
         ) : (

@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { useFieldContext } from './Field';
 
 export const controlClasses =
-  'w-full min-w-0 rounded-sm border border-line bg-base px-2.5 text-sm text-fg placeholder:text-fg-muted/70 ' +
+  'w-full min-w-0 rounded-sm border border-line bg-canvas px-2.5 text-sm text-fg placeholder:text-fg-muted/70 ' +
   'transition-colors duration-fast hover:border-fg-muted/50 focus:border-accent/70 ' +
   'disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-critical/70';
 

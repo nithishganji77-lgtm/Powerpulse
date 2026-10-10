@@ -75,7 +75,7 @@ export default function LoginPage() {
       <div className="mt-8 border-t border-line pt-5 text-sm text-fg-muted">
         <p>
           Just exploring?{' '}
-          <Link to="/demo" className="font-medium text-accent hover:underline">
+          <Link to="/demo" className="font-medium text-accent-ink hover:underline">
             Try the demo
           </Link>{' '}
           with simulated data.

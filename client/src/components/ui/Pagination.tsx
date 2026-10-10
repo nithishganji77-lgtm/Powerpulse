@@ -47,7 +47,7 @@ export function Pagination({
             <select
               value={size}
               onChange={(e) => onSizeChange(Number(e.target.value))}
-              className="h-7 rounded-sm border border-line bg-base px-1.5 text-xs text-fg [&>option]:bg-panel"
+              className="h-7 rounded-sm border border-line bg-canvas px-1.5 text-xs text-fg [&>option]:bg-panel"
             >
               {sizeOptions.map((s) => (
                 <option key={s} value={s}>

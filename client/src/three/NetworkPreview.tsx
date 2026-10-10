@@ -58,7 +58,7 @@ export default function NetworkPreview({
     [byId, onSelect],
   );
 
-  const bg = theme === 'light' ? 'bg-paper' : 'bg-base';
+  const bg = theme === 'light' ? 'bg-paper' : 'bg-canvas';
   const fallback = (
     <Grid2D
       nodes={gridNodes}

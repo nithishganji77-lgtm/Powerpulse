@@ -140,7 +140,7 @@ export default function NotificationsPage() {
                       <span className="mt-1 flex items-center gap-1 font-mono text-[0.7rem] text-fg-muted">
                         <time dateTime={n.createdAt}>{formatDateTime(n.createdAt)}</time>
                         {href && (
-                          <span className="inline-flex items-center text-accent group-hover:underline">
+                          <span className="inline-flex items-center text-accent-ink group-hover:underline">
                             · Open <ChevronRight aria-hidden="true" className="h-3 w-3" />
                           </span>
                         )}
