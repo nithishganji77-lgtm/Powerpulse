@@ -193,7 +193,9 @@ export default function GridPage() {
   const hasData = nodes.length > 0;
 
   return (
-    <div className="flex min-h-full flex-col gap-3 bg-base p-3 text-fg sm:p-4 lg:p-6">
+    // On lg the page fills the viewport left by the app shell (h-14 top bar + sm:py-6 main padding) so the
+    // scene and side column share one height and the transformer list scrolls instead of overflowing.
+    <div className="flex flex-col gap-3 text-fg lg:h-[calc(100dvh-6.5rem)] lg:min-h-[640px]">
       <header className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <p className="font-mono text-label uppercase text-fg-muted">Network</p>
@@ -233,7 +235,7 @@ export default function GridPage() {
       )}
 
       <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="relative h-[60vh] min-h-[420px] overflow-hidden rounded border border-line bg-base lg:h-[calc(100dvh-17rem)] lg:min-h-[520px]">
+        <div className="relative h-[60vh] min-h-[420px] overflow-hidden rounded border border-line bg-base lg:h-auto lg:min-h-0">
           {viewport}
           {hasData && (
             <GridLegend className="pointer-events-none absolute bottom-2 left-2 right-2 sm:right-auto" />
@@ -245,12 +247,13 @@ export default function GridPage() {
           )}
         </div>
 
-        <aside className="flex min-h-0 flex-col gap-3 lg:h-[calc(100dvh-17rem)] lg:min-h-[520px]">
+        <aside className="flex min-h-0 flex-col gap-3 lg:overflow-hidden">
           {selected && (
             <DetailPanel
               transformer={selected}
               onClose={clearSelection}
               onFocus={use3d ? focusSelected : undefined}
+              className="shrink-0"
             />
           )}
           {hasData && (
@@ -259,7 +262,7 @@ export default function GridPage() {
               selectedId={selectedId}
               onSelect={select}
               onHover={setHoveredId}
-              className="max-h-[50vh] min-h-[200px] flex-1 lg:max-h-none"
+              className="max-h-[50vh] min-h-[10rem] flex-1 lg:max-h-none"
             />
           )}
         </aside>
