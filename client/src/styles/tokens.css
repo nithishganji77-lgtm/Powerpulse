@@ -22,27 +22,41 @@
   --fg: 236 235 228;         /* #ECEBE4 */
   --fg-muted: 150 153 141;   /* #96998D */
 
-  /* Typography */
-  --font-display: 'General Sans', 'Inter', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
-  --text-display-xl: clamp(3.25rem, 11vw, 11.5rem);
-  --text-display-lg: clamp(2.75rem, 8vw, 8rem);
-  --text-display-md: clamp(2.25rem, 5.5vw, 5.25rem);
-  --text-display-sm: clamp(1.75rem, 3.2vw, 3rem);
+  /* Typography
+   * Display: General Sans 600 — size-led hierarchy, solid leading, negative tracking.
+   * Body: Inter 400/500. Technical labels: JetBrains Mono 500, uppercase, positive tracking. */
+  --font-display: 'General Sans', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --text-display-xl: clamp(2.6rem, 8.2vw, 8.5rem);
+  --text-display-lg: clamp(2.35rem, 6.2vw, 7rem);
+  --text-display-md: clamp(2rem, 5.4vw, 5.25rem);
+  --text-display-sm: clamp(1.6rem, 3.2vw, 3rem);
   --text-metric: clamp(2.5rem, 6vw, 5.5rem);
+  --text-lead: clamp(1.125rem, 1.6vw, 1.5rem);
+  --text-body-lg: clamp(1rem, 1.15vw, 1.125rem);
+  --tracking-display: -0.035em;
+  --tracking-tight: -0.02em;
+  --tracking-label: 0.08em;
+  --leading-display: 0.92;
+  --leading-body: 1.55;
 
   /* Layout */
   --layout-content: 1600px;
   --layout-prose: 38rem;
   --gutter: clamp(1rem, 3vw, 2.5rem);
+  --section-y: clamp(6rem, 14vw, 13rem);
+  --header-h: 4.5rem;
 
-  /* Motion */
+  /* Motion — transform/opacity only; nothing loops. Mirrored in pages/landing/motion/tokens.ts */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-fast: 150ms;
   --dur-base: 300ms;
   --dur-slow: 700ms;
+  --dur-reveal: 900ms;
+  --stagger-line: 80ms;
 
   /* Focus */
   --focus-ring: 0 0 0 2px rgb(var(--accent)), 0 0 0 4px rgb(var(--ink));
@@ -53,5 +67,7 @@
     --dur-fast: 0ms;
     --dur-base: 0ms;
     --dur-slow: 0ms;
+    --dur-reveal: 0ms;
+    --stagger-line: 0ms;
   }
 }
