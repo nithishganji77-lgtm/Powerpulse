@@ -186,6 +186,18 @@ class AuthControllerTest extends SecurityTestSupport {
     }
 
     @Test
+    void authenticatedRequestsDoNotRotateTheCsrfToken() throws Exception {
+        // Regression: per-request JWT authentication must not be treated as a new login that
+        // clears/rotates XSRF-TOKEN, or concurrent SPA mutations fail with 403.
+        User user = user("u10", Role.ENGINEER, true);
+        MvcResult result = mvc.perform(get("/api/v1/auth/me").cookie(loginCookie(user), csrfCookie()))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(result.getResponse().getHeaders(HttpHeaders.SET_COOKIE))
+                .noneSatisfy(h -> assertThat(h).startsWith("XSRF-TOKEN="));
+    }
+
+    @Test
     void logoutWithoutCsrfHeaderIsForbiddenJson() throws Exception {
         User user = user("u7", Role.ENGINEER, true);
         mvc.perform(post("/api/v1/auth/logout").cookie(loginCookie(user)))
