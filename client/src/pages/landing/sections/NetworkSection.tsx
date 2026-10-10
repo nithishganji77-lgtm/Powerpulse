@@ -63,7 +63,7 @@ export function NetworkSection() {
             >
               {hasData && near ? (
                 <Suspense fallback={fallback}>
-                  <NetworkPreview nodes={nodes} height="100%" interactive className="h-full w-full" />
+                  <NetworkPreview nodes={nodes} height="100%" interactive theme="dark" className="h-full w-full" />
                 </Suspense>
               ) : (
                 fallback
