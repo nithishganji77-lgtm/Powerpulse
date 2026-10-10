@@ -2,6 +2,7 @@ package com.powerpulse.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powerpulse.user.UserRepository;
+import jakarta.servlet.DispatcherType;
 import java.util.List;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
@@ -79,6 +81,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfRepository)
                         .csrfTokenRequestHandler(csrfHandler)
+                        // The JWT filter authenticates every request; the default CSRF session strategy would
+                        // treat each one as a fresh login and rotate the token, breaking concurrent SPA requests.
+                        .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy())
                         .ignoringRequestMatchers(PathPatternRequestMatcher.withDefaults()
                                 .matcher(HttpMethod.POST, LOGIN_PATH)))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -90,6 +95,9 @@ public class SecurityConfig {
                 .addFilterBefore(new JwtCookieAuthenticationFilter(jwtService, userRepository, authCookies),
                         UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
+                        // Async (streamed CSV) and error dispatches re-enter the chain after the original
+                        // request was already authorized; the JWT filter does not re-run for them.
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(LOGIN_PATH, "/api/v1/auth/csrf", "/api/v1/auth/logout").permitAll()
                         .requestMatchers("/api/v1/public/**").permitAll()
