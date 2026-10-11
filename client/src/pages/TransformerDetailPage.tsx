@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Boxes, ChevronRight, ClipboardPlus, MapPin, Pencil, Siren } from 'lucide-react';
-import { useTransformer } from '@/hooks/useMonitoring';
+import { Boxes, ChevronRight, ClipboardPlus, Gauge, Hand, MapPin, Pencil, Siren } from 'lucide-react';
+import { useSimulationControl, useSimulationStatus, useTransformer } from '@/hooks/useMonitoring';
 import { useSettings } from '@/hooks/useAdmin';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/services/apiClient';
@@ -27,6 +27,9 @@ import {
   Recommendations,
 } from '@/components/transformers/DetailSections';
 import { MaintenanceCreateDialog } from '@/components/maintenance/MaintenanceCreateDialog';
+import { RecordReadingDialog } from '@/components/transformers/RecordReadingDialog';
+import { useToast } from '@/components/ui/Toast';
+import { errorMessage } from '@/components/ui/ErrorState';
 import { links } from '@/utils/links';
 
 function SectionLabel({ children }: { children: string }) {
@@ -41,6 +44,7 @@ export default function TransformerDetailPage() {
   const settings = useSettings(canReadSettings);
   const [editOpen, setEditOpen] = useState(false);
   const [maintOpen, setMaintOpen] = useState(false);
+  const [readingOpen, setReadingOpen] = useState(false);
 
   if (detail.isPending) {
     return (
@@ -115,6 +119,11 @@ export default function TransformerDetailPage() {
               <ButtonLink to={links.alertsForTransformer(t.id)} variant="secondary" icon={<Siren />}>
                 View alerts
               </ButtonLink>
+              <RoleGate roles={['ADMIN', 'ENGINEER', 'TECHNICIAN']}>
+                <Button variant="secondary" icon={<Gauge />} onClick={() => setReadingOpen(true)}>
+                  Record reading
+                </Button>
+              </RoleGate>
               <RoleGate roles={['ADMIN', 'ENGINEER']}>
                 <Button variant="secondary" icon={<Pencil />} onClick={() => setEditOpen(true)}>
                   Edit
@@ -127,6 +136,8 @@ export default function TransformerDetailPage() {
           }
         />
       </div>
+
+      <ManualHoldNotice transformerId={t.id} />
 
       <section aria-label="Condition and telemetry" className="grid grid-cols-1 gap-3 lg:grid-cols-12">
         <Panel
@@ -168,6 +179,7 @@ export default function TransformerDetailPage() {
         </div>
       </section>
 
+      <RecordReadingDialog open={readingOpen} onClose={() => setReadingOpen(false)} transformer={t} />
       <TransformerFormDialog open={editOpen} onClose={() => setEditOpen(false)} transformer={t} />
       <MaintenanceCreateDialog
         open={maintOpen}
@@ -176,6 +188,45 @@ export default function TransformerDetailPage() {
         transformerLabel={label}
         defaultPriority={t.status === 'CRITICAL' ? 'HIGH' : 'MEDIUM'}
       />
+    </div>
+  );
+}
+
+/** Shown while the simulator skips this transformer because its readings are being entered manually. */
+function ManualHoldNotice({ transformerId }: { transformerId: string }) {
+  const sim = useSimulationStatus();
+  const { scenario } = useSimulationControl();
+  const toast = useToast();
+  const held = sim.data?.scenarios.some((s) => s.transformerId === transformerId && s.name === 'manual');
+  if (!held) return null;
+  const resume = () =>
+    scenario.mutate(
+      { name: 'healthy', transformerId },
+      {
+        onSuccess: () => toast.success('Simulation resumed', 'The simulator will generate readings for this unit again.'),
+        onError: (e) => toast.error('Could not resume simulation', errorMessage(e)),
+      },
+    );
+  return (
+    <div
+      role="status"
+      className="flex flex-wrap items-center justify-between gap-3 rounded-sm border border-line bg-panel px-4 py-3"
+    >
+      <p className="flex items-start gap-2.5 text-sm text-fg">
+        <Hand aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-fg-muted" />
+        <span>
+          <span className="font-medium">Manual readings.</span>{' '}
+          <span className="text-fg-muted">
+            The simulator is skipping this transformer. It shows OFFLINE if no reading is entered within the sensor
+            timeout.
+          </span>
+        </span>
+      </p>
+      <RoleGate roles={['ADMIN', 'ENGINEER']}>
+        <Button variant="secondary" size="sm" loading={scenario.isPending} onClick={resume}>
+          Resume simulation
+        </Button>
+      </RoleGate>
     </div>
   );
 }

@@ -114,7 +114,7 @@ class SimulationEngineTest {
     @Test
     void scenarioSlugs() {
         assertThat(Scenario.slugs()).containsExactly("healthy", "rising-temperature", "low-oil", "overloading",
-                "critical-overheating", "offline", "return-to-normal");
+                "critical-overheating", "offline", "return-to-normal", "manual");
         assertThat(Scenario.fromSlug("nope")).isEmpty();
     }
 }

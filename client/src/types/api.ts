@@ -26,7 +26,8 @@ export type NotificationType =
   | 'UPCOMING_INSPECTION'
   | 'INCIDENT_RESOLVED'
   | 'TRANSFORMER_OFFLINE';
-export type ReadingSource = 'SIMULATED' | 'DEVICE';
+/** MANUAL = entered by a signed-in user (ADMIN, ENGINEER, TECHNICIAN). */
+export type ReadingSource = 'SIMULATED' | 'DEVICE' | 'MANUAL';
 export type ResourceType = 'TRANSFORMER' | 'ALERT' | 'MAINTENANCE' | 'INCIDENT' | 'USER' | 'SETTINGS' | 'SIMULATION';
 export type ScenarioName =
   | 'healthy'
@@ -35,7 +36,9 @@ export type ScenarioName =
   | 'overloading'
   | 'critical-overheating'
   | 'offline'
-  | 'return-to-normal';
+  | 'return-to-normal'
+  /** Simulator skips this transformer because its readings are entered manually. */
+  | 'manual';
 
 /** ISO-8601 UTC timestamp string. */
 export type Instant = string;
@@ -225,6 +228,22 @@ export interface ReadingInput {
   loadPct: number | null;
   powerFactor?: number | null;
   recordedAt?: Instant;
+}
+
+/** Body for POST /transformers/{id}/readings (roles: ADMIN, ENGINEER, TECHNICIAN). */
+export interface ManualReadingRequest {
+  temperatureC: number;
+  oilLevelPct: number;
+  voltageV: number;
+  currentA: number;
+  loadPct: number;
+  powerFactor?: number | null;
+  /** When the meter was read; defaults to now. Not in the future, not older than 7 days. */
+  recordedAt?: Instant;
+  /** Exclude the transformer from the simulator so the value is not overwritten (default true). */
+  holdFromSimulator?: boolean;
+  /** Short note recorded in the audit log (max 200 chars). */
+  note?: string;
 }
 
 // ---------- Alerts ----------

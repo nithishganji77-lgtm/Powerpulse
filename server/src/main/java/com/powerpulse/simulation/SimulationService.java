@@ -183,7 +183,7 @@ public class SimulationService {
         for (Transformer t : transformerRepository.findAll(Sort.by("code"))) {
             ActiveScenario active = scenarios.get(t.getId());
             Scenario scenario = active == null ? null : Scenario.fromSlug(active.getName()).orElse(null);
-            if (scenario == Scenario.OFFLINE) {
+            if (scenario == Scenario.OFFLINE || scenario == Scenario.MANUAL) {
                 continue;
             }
             try {

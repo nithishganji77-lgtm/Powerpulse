@@ -16,7 +16,7 @@ Timestamps are stored as `Instant` (UTC) and serialized as ISO-8601 strings. Ids
 | `MaintenanceStatus` | PENDING, ASSIGNED, IN_PROGRESS, COMPLETED, CANCELLED |
 | `Priority` | LOW, MEDIUM, HIGH, URGENT |
 | `NotificationType` | NEW_CRITICAL_ALERT, MAINTENANCE_ASSIGNED, MAINTENANCE_OVERDUE, UPCOMING_INSPECTION, INCIDENT_RESOLVED, TRANSFORMER_OFFLINE |
-| `ReadingSource` | SIMULATED, DEVICE |
+| `ReadingSource` | SIMULATED, DEVICE, MANUAL (entered by a signed-in user) |
 | `ResourceType` | TRANSFORMER, ALERT, MAINTENANCE, INCIDENT, USER, SETTINGS, SIMULATION |
 
 ## Collections
@@ -72,7 +72,7 @@ Timestamps are stored as `Instant` (UTC) and serialized as ISO-8601 strings. Ids
 | currentA | Double | secondary line current A |
 | loadPct | Double | % of rated kVA |
 | powerFactor | Double? | 0–1 |
-| source | ReadingSource | SIMULATED or DEVICE |
+| source | ReadingSource | SIMULATED, DEVICE or MANUAL |
 | simulationId | String? | simulator run id when SIMULATED |
 | scenario | String? | active scenario name when SIMULATED |
 | recordedAt | Instant | |

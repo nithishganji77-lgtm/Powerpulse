@@ -102,8 +102,8 @@ public class SimulationEngine {
                     pf = toward(previous == null ? null : previous.getPowerFactor(), n.powerFactor(), f);
                     complete = k >= RETURN_TICKS;
                 }
-                case OFFLINE -> {
-                    // The caller skips offline transformers; generating a reading here would be a bug.
+                case OFFLINE, MANUAL -> {
+                    // The caller skips offline and manually-read transformers; generating a reading here would be a bug.
                     throw new IllegalArgumentException("offline scenario produces no reading");
                 }
             }

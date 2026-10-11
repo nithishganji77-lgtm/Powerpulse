@@ -12,7 +12,9 @@ public enum Scenario {
     OVERLOADING("overloading"),
     CRITICAL_OVERHEATING("critical-overheating"),
     OFFLINE("offline"),
-    RETURN_TO_NORMAL("return-to-normal");
+    RETURN_TO_NORMAL("return-to-normal"),
+    /** Readings are entered manually; the simulator skips this transformer so it never overwrites them. */
+    MANUAL("manual");
 
     private final String slug;
 

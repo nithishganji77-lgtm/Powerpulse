@@ -27,7 +27,7 @@ import {
   formatWithUnit,
   isNum,
 } from '@/utils/format';
-import { faultTypeLabel } from '@/utils/labels';
+import { faultTypeLabel, readingSourceLabel } from '@/utils/labels';
 import { links } from '@/utils/links';
 
 export function PanelLink({ to, children }: { to: string; children: string }) {
@@ -75,7 +75,7 @@ export function CurrentReadings({ t }: { t: TransformerDetailDto }) {
       flush
       actions={
         <span className="flex flex-wrap items-center gap-2">
-          {r?.source === 'SIMULATED' ? <SimulatedBadge /> : r ? <Badge tone="neutral">Device</Badge> : null}
+          {r?.source === 'SIMULATED' ? <SimulatedBadge /> : r ? <Badge tone="neutral">{readingSourceLabel[r.source]}</Badge> : null}
           <Freshness at={t.lastReadingAt} stale={t.stale} label="Last reading" />
         </span>
       }
@@ -116,7 +116,7 @@ export function CurrentReadings({ t }: { t: TransformerDetailDto }) {
             })}
           </dl>
           <p className="border-t border-line px-4 py-2 font-mono text-[0.6875rem] text-fg-muted">
-            Recorded <time dateTime={r.recordedAt}>{formatDateTime(r.recordedAt)}</time> · source {r.source === 'SIMULATED' ? 'PowerPulse simulator' : 'device'}
+            Recorded <time dateTime={r.recordedAt}>{formatDateTime(r.recordedAt)}</time> · source {r.source === 'SIMULATED' ? 'PowerPulse simulator' : r.source === 'MANUAL' ? 'manual entry' : 'device'}
           </p>
         </>
       )}

@@ -7,6 +7,7 @@ import { simulationService } from '@/services/simulationService';
 import { publicService } from '@/services/publicService';
 import type {
   DashboardFilters,
+  ManualReadingRequest,
   Instant,
   ScenarioName,
   TransformerListParams,
@@ -103,6 +104,19 @@ export function useUpdateTransformer(id: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.transformers.all });
       qc.invalidateQueries({ queryKey: qk.dashboard.all });
+    },
+  });
+}
+
+/** Records a manual reading. A new reading can change alerts, health, status, dashboard counts and notifications. */
+export function useRecordReading(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ManualReadingRequest) => transformerService.recordReading(id, body),
+    onSuccess: () => {
+      for (const key of [qk.transformers.all, qk.dashboard.all, qk.alerts.all, qk.simulation, qk.notifications.all]) {
+        qc.invalidateQueries({ queryKey: key });
+      }
     },
   });
 }

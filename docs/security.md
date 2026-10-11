@@ -32,6 +32,7 @@ Explicit allow-list from `powerpulse.cors.allowed-origins` (env `CORS_ORIGIN`, d
 | Create maintenance task (incl. from alert) | ✓ | ✓ | – | – |
 | Assign technician, change priority / due date, cancel task | ✓ | ✓ | – | – |
 | View maintenance tasks | all | all | all | **own assigned only** |
+| Record manual meter readings (`POST /transformers/{id}/readings`) | ✓ | ✓ | – | ✓ |
 | Update task progress: start, findings, work notes, parts, complete | ✓ | ✓ | – | **own assigned only** |
 | Reports and CSV export | ✓ | ✓ | ✓ | – |
 | Read settings | ✓ | ✓ | – | – |

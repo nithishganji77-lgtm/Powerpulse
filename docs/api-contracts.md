@@ -41,6 +41,7 @@ Shared filters: `location?`, `status?`, `from?`, `to?` (ISO).
 | GET | /transformers/{id} | → `TransformerDetailDto` (transformer + recommendations + health factors) | all |
 | PATCH | /transformers/{id} | `TransformerUpsertRequest` (partial: null fields ignored) → `TransformerDto` | ADMIN, ENGINEER |
 | GET | /transformers/{id}/readings?from&to&maxPoints=500 | → `ReadingDto[]` ascending; downsampled by time bucket average when > maxPoints | all |
+| POST | /transformers/{id}/readings | `ManualReadingRequest` → 201 `ReadingDto` (source `MANUAL`). Impossible values → 400 (not SENSOR_FAILURE); voltage > 2× rated, future or > 7-day-old `recordedAt` → 400. `holdFromSimulator` (default true) applies the `manual` scenario so the simulator skips the unit. Same fault/alert/health pipeline as device readings; audited `READING_RECORDED_MANUALLY`. | ADMIN, ENGINEER, TECHNICIAN |
 | GET | /transformers/{id}/alerts?active | → `AlertDto[]` | all |
 | GET | /transformers/{id}/maintenance | → `MaintenanceDto[]` (technician: only own) | all |
 | GET | /transformers/{id}/incidents | → `FaultIncidentDto[]` | all |
@@ -98,7 +99,7 @@ Status transitions: PENDING→ASSIGNED (on assignment), ASSIGNED→IN_PROGRESS, 
 | POST | /simulation/start | → `SimulationStatus` | ADMIN, ENGINEER |
 | POST | /simulation/pause | → `SimulationStatus` | ADMIN, ENGINEER |
 | POST | /simulation/reset | → `SimulationStatus` (clears scenarios; all transformers return to nominal behavior) | ADMIN, ENGINEER |
-| POST | /simulation/scenarios/{scenarioName}?transformerId= | → `SimulationStatus`. Scenario names: `healthy, rising-temperature, low-oil, overloading, critical-overheating, offline, return-to-normal` | ADMIN, ENGINEER |
+| POST | /simulation/scenarios/{scenarioName}?transformerId= | → `SimulationStatus`. Scenario names: `healthy, rising-temperature, low-oil, overloading, critical-overheating, offline, return-to-normal, manual` (`manual`: the simulator skips the unit because readings are entered by users; `healthy` clears it) | ADMIN, ENGINEER |
 
 ## Public
 | GET | /public/network-preview | → `NetworkPreviewNode[]` (sanitized, all marked simulated) | public |

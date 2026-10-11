@@ -104,6 +104,7 @@ export const notificationTypeLabel: Record<NotificationType, string> = {
 export const readingSourceLabel: Record<ReadingSource, string> = {
   SIMULATED: 'Simulated',
   DEVICE: 'Device',
+  MANUAL: 'Manual entry',
 };
 
 export const scenarioLabel: Record<ScenarioName, string> = {
@@ -114,6 +115,7 @@ export const scenarioLabel: Record<ScenarioName, string> = {
   'critical-overheating': 'Critical overheating',
   offline: 'Offline (stop readings)',
   'return-to-normal': 'Return to normal',
+  manual: 'Manual readings (simulator skips)',
 };
 
 export const healthFactorLabel: Record<string, string> = {
