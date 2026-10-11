@@ -76,6 +76,47 @@ describe('AlertsPage', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('active=all');
   });
 
+  it('reads the header counts from size=1 alert queries (totalElements), not the visible page', async () => {
+    svc.list.mockImplementation(async (p = {}) => {
+      if (p.size === 1) {
+        const total = p.severity === 'CRITICAL' ? 3 : p.status === 'NEW' ? 7 : p.status === 'IN_PROGRESS' ? 2 : 41;
+        return page([], { size: 1, totalElements: total, totalPages: total });
+      }
+      return page([makeAlert()]);
+    });
+    setup();
+    const counts = await screen.findByRole('region', { name: 'Alert counts' });
+    expect(await within(counts).findByRole('button', { name: /^Active alerts: 41/ })).toBeInTheDocument();
+    expect(within(counts).getByRole('button', { name: /^Critical: 3/ })).toBeInTheDocument();
+    expect(within(counts).getByRole('button', { name: /^Unacknowledged: 7/ })).toBeInTheDocument();
+    expect(within(counts).getByRole('button', { name: /^In progress: 2/ })).toBeInTheDocument();
+    expect(svc.list).toHaveBeenCalledWith({ active: true, page: 0, size: 1 });
+    expect(svc.list).toHaveBeenCalledWith({ active: true, severity: 'CRITICAL', page: 0, size: 1 });
+
+    await userEvent.click(within(counts).getByRole('button', { name: /^Critical: 3/ }));
+    await waitFor(() => expect(svc.list).toHaveBeenLastCalledWith(expect.objectContaining({ size: 20, severity: 'CRITICAL', active: true })));
+  });
+
+  it('disables every action while a workflow change is pending and does not toast early', async () => {
+    let finish: (v: unknown) => void = () => {};
+    svc.acknowledge.mockReturnValue(new Promise((r) => (finish = r)) as never);
+    setup('ENGINEER', '/alerts?focus=a1');
+    const drawer = await screen.findByRole('dialog', { name: /overheating · PP-TX-004/i });
+    const ack = await within(drawer).findByRole('button', { name: 'Acknowledge' });
+    await userEvent.click(ack);
+    await waitFor(() => expect(ack).toBeDisabled());
+    expect(ack).toHaveAttribute('aria-busy', 'true');
+    expect(within(drawer).getByRole('button', { name: 'Resolve' })).toBeDisabled();
+    expect(within(drawer).getByRole('button', { name: 'Create maintenance' })).toBeDisabled();
+    expect(within(drawer).getByRole('button', { name: 'Assign' })).toBeDisabled();
+    await userEvent.click(ack);
+    expect(svc.acknowledge).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('Alert acknowledged')).not.toBeInTheDocument();
+
+    finish(makeAlert({ status: 'ACKNOWLEDGED' }));
+    expect(await screen.findByText('Alert acknowledged')).toBeInTheDocument();
+  });
+
   it('sorts via the table header', async () => {
     setup();
     await screen.findByText('PP-TX-004', { selector: 'a' });

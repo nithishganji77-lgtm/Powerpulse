@@ -22,6 +22,7 @@ describe('NotificationsPage', () => {
     vi.clearAllMocks();
     vi.mocked(authService.csrf).mockResolvedValue(undefined);
     vi.mocked(authService.me).mockResolvedValue(makeUser('OPERATOR'));
+    svc.unreadCount.mockResolvedValue({ count: 1 });
     svc.list.mockResolvedValue(
       page([
         makeNotification(),
@@ -35,6 +36,35 @@ describe('NotificationsPage', () => {
     await screen.findByText('Critical alert on PP-TX-004');
     expect(screen.getAllByText('Unread', { selector: 'span' })).toHaveLength(1);
     expect(screen.getByRole('button', { name: /^Unread: Critical alert on PP-TX-004/ })).toBeInTheDocument();
+  });
+
+  it('labels each notification type in text with unread dot + "Unread" text and an unread total', async () => {
+    svc.unreadCount.mockResolvedValue({ count: 2 });
+    svc.list.mockResolvedValue(
+      page([
+        makeNotification(),
+        makeNotification({ id: 'n3', title: 'Task overdue', type: 'MAINTENANCE_OVERDUE', relatedType: 'MAINTENANCE', relatedId: 'm3' }),
+        makeNotification({ id: 'n4', title: 'PP-TX-009 offline', type: 'TRANSFORMER_OFFLINE', relatedType: 'TRANSFORMER', relatedId: 't9', read: true }),
+        makeNotification({ id: 'n5', title: 'Incident closed', type: 'INCIDENT_RESOLVED', relatedType: 'INCIDENT', relatedId: 'i5', read: true }),
+      ]),
+    );
+    renderWithProviders(<NotificationsPage />, { route: '/notifications', path: '/notifications' });
+    await screen.findByText('Critical alert on PP-TX-004');
+    for (const label of ['Critical alert', 'Maintenance overdue', 'Transformer offline', 'Incident resolved']) {
+      expect(screen.getByText(label, { selector: 'span' })).toBeInTheDocument();
+    }
+    expect(screen.getAllByText('Unread', { selector: 'span' })).toHaveLength(2);
+    expect(await screen.findByText('2 unread')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Today' })).toBeInTheDocument();
+    // Read items have no mark-as-read control.
+    expect(screen.queryByRole('button', { name: 'Mark "PP-TX-009 offline" as read' })).not.toBeInTheDocument();
+  });
+
+  it('disables "Mark all read" when nothing is unread', async () => {
+    svc.unreadCount.mockResolvedValue({ count: 0 });
+    renderWithProviders(<NotificationsPage />, { route: '/notifications', path: '/notifications' });
+    expect(await screen.findByText('All caught up')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /mark all read/i })).toBeDisabled();
   });
 
   it('marks all as read', async () => {

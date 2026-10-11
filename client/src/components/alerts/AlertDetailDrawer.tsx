@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, Play, UserCheck, Wrench } from 'lucide-react';
+import { CheckCircle2, Play, Repeat, UserCheck, Wrench } from 'lucide-react';
 import { useAlert, useAlertActions } from '@/hooks/useWorkflows';
 import { useAssignableUsers } from '@/hooks/useAdmin';
 import { useAuth } from '@/context/AuthContext';
@@ -15,11 +15,12 @@ import { LoadingBlock } from '@/components/ui/Skeleton';
 import { AlertStatusBadge, SeverityBadge } from '@/components/ui/StatusBadges';
 import { useToast } from '@/components/ui/Toast';
 import { MaintenanceCreateDialog } from '@/components/maintenance/MaintenanceCreateDialog';
-import { DetailGrid, DrawerSection, shortId, Timeline } from '@/components/workflow/DetailBits';
+import { DetailGrid, DrawerSection, MetricStrip, shortId, Timeline } from '@/components/workflow/DetailBits';
+import { AlertWorkflowSteps } from './AlertWorkflow';
 import { ResolveAlertDialog } from './ResolveAlertDialog';
 import { RecoveredBadge } from './RecoveredBadge';
 import { formatDateTime, formatWithUnit } from '@/utils/format';
-import { faultTypeLabel, humanize, roleLabel } from '@/utils/labels';
+import { faultTypeLabel, humanize, roleLabel, severityLabel } from '@/utils/labels';
 import { links } from '@/utils/links';
 
 /** Default maintenance priority for an alert severity. */
@@ -45,14 +46,14 @@ export function AlertDetailDrawer({ alertId, fallback, onClose }: AlertDetailDra
       open={!!alertId}
       onClose={onClose}
       title={alert ? `${faultTypeLabel[alert.faultType]} · ${alert.transformerCode}` : 'Alert'}
-      widthClass="w-[min(34rem,100vw)]"
+      widthClass="w-[min(36rem,100vw)]"
     >
       {alert ? (
         <AlertDetailBody alert={alert} />
       ) : detail.isError ? (
         <ErrorState error={detail.error} title="Could not load the alert" onRetry={() => void detail.refetch()} retrying={detail.isRefetching} />
       ) : (
-        <LoadingBlock className="p-4" lines={8} label="Loading alert" />
+        <LoadingBlock className="p-5" lines={8} label="Loading alert" />
       )}
     </Drawer>
   );
@@ -69,69 +70,75 @@ function AlertDetailBody({ alert }: { alert: AlertDto }) {
   const [assignee, setAssignee] = useState(alert.assignedUserId ?? '');
   const [resolveOpen, setResolveOpen] = useState(false);
   const [maintOpen, setMaintOpen] = useState(false);
+  // Synchronous guard against double submits before the pending state re-renders.
+  const inFlight = useRef(false);
 
   useEffect(() => setAssignee(alert.assignedUserId ?? ''), [alert.assignedUserId]);
 
+  const busy = actions.acknowledge.isPending || actions.update.isPending || actions.assign.isPending;
+
+  /** Toasts only after the backend has confirmed (or rejected) the change. */
   const run = async (label: string, failLabel: string, fn: () => Promise<unknown>) => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     try {
       await fn();
       toast.success(label, `${faultTypeLabel[alert.faultType]} on ${alert.transformerCode}`);
     } catch (e) {
       toast.error(failLabel, errorMessage(e, 'The action could not be completed.'));
+    } finally {
+      inFlight.current = false;
     }
   };
 
-  const busy = actions.acknowledge.isPending || actions.update.isPending || actions.assign.isPending;
   const unit = alert.unit;
+  const critical = alert.severity === 'CRITICAL' && open;
 
   return (
     <>
-      <DrawerSection title="Summary">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
+      <header className="relative border-b border-line px-5 pb-4 pt-4">
+        {critical && <span aria-hidden="true" className="absolute inset-y-0 left-0 w-[3px] bg-critical" />}
+        <p className="font-mono text-label uppercase text-fg-muted">
+          Alert {shortId(alert.id)} · {severityLabel[alert.severity]} severity
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <SeverityBadge value={alert.severity} />
           <AlertStatusBadge value={alert.status} />
           {!alert.active && alert.status !== 'RESOLVED' && <Badge>Inactive</Badge>}
-          {alert.recovered && alert.status !== 'RESOLVED' && <RecoveredBadge />}
-          {alert.recurrenceCount > 0 && <Badge tone="warning">Recurrence ×{alert.recurrenceCount}</Badge>}
+          {alert.recurrenceCount > 0 && (
+            <Badge tone="warning" icon={<Repeat aria-hidden="true" />}>
+              Recurrence ×{alert.recurrenceCount}
+            </Badge>
+          )}
         </div>
-        <p className="mb-4 text-sm text-fg">{alert.description}</p>
-        <DetailGrid
+        {alert.recovered && alert.status !== 'RESOLVED' && <RecoveredBadge className="mt-2" />}
+        <p className="mt-3 text-sm leading-relaxed text-fg">{alert.description}</p>
+        <p className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-fg-muted">
+          <Link to={links.transformer(alert.transformerId)} className="font-mono font-medium text-accent-ink underline-offset-2 hover:underline">
+            {alert.transformerCode}
+          </Link>
+          <span>{alert.transformerName}</span>
+          <span aria-hidden="true">·</span>
+          <span>{alert.location}</span>
+        </p>
+        <MetricStrip
+          className="mt-4"
           items={[
-            {
-              label: 'Transformer',
-              value: (
-                <Link to={links.transformer(alert.transformerId)} className="text-accent-ink hover:underline">
-                  {alert.transformerCode}
-                </Link>
-              ),
-            },
-            { label: 'Location', value: alert.location },
             { label: 'Measured', value: formatWithUnit(alert.measuredValue, unit) },
             { label: 'Threshold', value: formatWithUnit(alert.threshold, unit) },
-            { label: 'Peak value', value: formatWithUnit(alert.peakValue, unit) },
-            { label: 'Peak severity', value: <SeverityBadge value={alert.peakSeverity} /> },
-            { label: 'Raised', value: formatDateTime(alert.createdAt) },
-            { label: 'Updated', value: formatDateTime(alert.updatedAt) },
-            {
-              label: 'Acknowledged',
-              value: alert.acknowledgedAt ? `${formatDateTime(alert.acknowledgedAt)}${alert.acknowledgedBy ? ` · ${alert.acknowledgedBy}` : ''}` : 'Not yet',
-            },
-            { label: 'Assignee', value: alert.assignedUserName ?? 'Unassigned' },
-            ...(alert.recovered && alert.recoveredAt ? [{ label: 'Readings normal since', value: formatDateTime(alert.recoveredAt) }] : []),
-            ...(alert.resolvedAt
-              ? [
-                  { label: 'Resolved', value: `${formatDateTime(alert.resolvedAt)}${alert.resolvedBy ? ` · ${alert.resolvedBy}` : ''}` },
-                  { label: 'Resolution notes', value: alert.resolutionNotes ?? '—', wide: true },
-                ]
-              : []),
+            { label: 'Peak', value: formatWithUnit(alert.peakValue, unit), hint: `Peak severity: ${severityLabel[alert.peakSeverity]}` },
           ]}
         />
+      </header>
+
+      <DrawerSection title="Workflow">
+        <AlertWorkflowSteps alert={alert} />
       </DrawerSection>
 
       {open && (canOperate || canResolve) && (
         <DrawerSection title="Actions">
           {alert.recovered && (
-            <p className="mb-3 text-xs text-fg-muted">
+            <p className="mb-3 border-l-2 border-healthy pl-3 text-xs text-fg-muted">
               Readings have returned to normal. Someone engaged with this alert, so it stays open until it is resolved with notes.
             </p>
           )}
@@ -151,7 +158,7 @@ function AlertDetailBody({ alert }: { alert: AlertDto }) {
             {canOperate && alert.status === 'ACKNOWLEDGED' && (
               <Button
                 size="sm"
-                variant="secondary"
+                variant="primary"
                 icon={<Play />}
                 loading={actions.update.isPending}
                 disabled={busy}
@@ -163,27 +170,27 @@ function AlertDetailBody({ alert }: { alert: AlertDto }) {
               </Button>
             )}
             {canResolve && (
-              <Button size="sm" variant="secondary" icon={<CheckCircle2 />} onClick={() => setResolveOpen(true)}>
+              <Button size="sm" variant="secondary" icon={<CheckCircle2 />} disabled={busy} onClick={() => setResolveOpen(true)}>
                 Resolve
               </Button>
             )}
             {canResolve && (
-              <Button size="sm" variant="secondary" icon={<Wrench />} onClick={() => setMaintOpen(true)}>
+              <Button size="sm" variant="secondary" icon={<Wrench />} disabled={busy} onClick={() => setMaintOpen(true)}>
                 Create maintenance
               </Button>
             )}
           </div>
           {canOperate && (
             <form
-              className="mt-4 flex items-end gap-2"
+              className="mt-4 flex items-end gap-2 border-t border-line pt-4"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (!assignee) return;
+                if (!assignee || busy) return;
                 void run('Alert assigned', 'Could not assign the alert', () => actions.assign.mutateAsync({ id: alert.id, userId: assignee }));
               }}
             >
               <Field label="Assign to" className="flex-1" hint={users.isError ? 'Could not load users.' : undefined}>
-                <Select value={assignee} onChange={(e) => setAssignee(e.target.value)} disabled={users.isPending}>
+                <Select value={assignee} onChange={(e) => setAssignee(e.target.value)} disabled={users.isPending || busy}>
                   <option value="">{users.isPending ? 'Loading…' : 'Select a user'}</option>
                   {(users.data ?? []).map((u) => (
                     <option key={u.id} value={u.id}>
@@ -206,6 +213,27 @@ function AlertDetailBody({ alert }: { alert: AlertDto }) {
         </DrawerSection>
       )}
 
+      <DrawerSection title="Details">
+        <DetailGrid
+          items={[
+            { label: 'Detected', value: formatDateTime(alert.createdAt) },
+            { label: 'Last updated', value: formatDateTime(alert.updatedAt) },
+            {
+              label: 'Acknowledged',
+              value: alert.acknowledgedAt ? `${formatDateTime(alert.acknowledgedAt)}${alert.acknowledgedBy ? ` · ${alert.acknowledgedBy}` : ''}` : 'Not yet',
+            },
+            { label: 'Assignee', value: alert.assignedUserName ?? 'Unassigned' },
+            ...(alert.recovered && alert.recoveredAt ? [{ label: 'Readings normal since', value: formatDateTime(alert.recoveredAt) }] : []),
+            ...(alert.resolvedAt
+              ? [
+                  { label: 'Resolved', value: `${formatDateTime(alert.resolvedAt)}${alert.resolvedBy ? ` · ${alert.resolvedBy}` : ''}` },
+                  { label: 'Resolution notes', value: alert.resolutionNotes ?? '—', wide: true },
+                ]
+              : []),
+          ]}
+        />
+      </DrawerSection>
+
       <DrawerSection title="Linked maintenance">
         {alert.maintenanceIds.length === 0 ? (
           <p className="text-xs text-fg-muted">No maintenance tasks linked to this alert.</p>
@@ -213,7 +241,11 @@ function AlertDetailBody({ alert }: { alert: AlertDto }) {
           <ul className="flex flex-wrap gap-2">
             {alert.maintenanceIds.map((id) => (
               <li key={id}>
-                <Link to={links.maintenance(id)} className="font-mono text-xs text-accent-ink hover:underline">
+                <Link
+                  to={links.maintenance(id)}
+                  className="inline-flex h-7 items-center gap-1.5 rounded-sm border border-line px-2 font-mono text-xs text-fg hover:border-line-strong hover:bg-raised/60"
+                >
+                  <Wrench aria-hidden="true" className="h-3 w-3 text-fg-muted" />
                   Task {shortId(id)}
                 </Link>
               </li>

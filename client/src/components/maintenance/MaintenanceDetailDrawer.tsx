@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, Play, XCircle } from 'lucide-react';
 import { useMaintenanceActions, useMaintenanceTask } from '@/hooks/useWorkflows';
@@ -15,9 +15,9 @@ import { LoadingBlock } from '@/components/ui/Skeleton';
 import { MaintenanceStatusBadge, OverdueBadge, PriorityBadge } from '@/components/ui/StatusBadges';
 import { Textarea } from '@/components/ui/Textarea';
 import { useToast } from '@/components/ui/Toast';
-import { DetailGrid, DrawerSection, shortId, Timeline } from '@/components/workflow/DetailBits';
+import { DetailGrid, DrawerSection, MetricStrip, shortId, Timeline } from '@/components/workflow/DetailBits';
 import { CancelTaskDialog, CompleteTaskDialog } from './TaskDialogs';
-import { formatDateTime, formatNumber, fromLocalInput, toLocalInput } from '@/utils/format';
+import { formatDate, formatDateTime, formatNumber, formatRelative, formatTime, fromLocalInput, toLocalInput } from '@/utils/format';
 import { humanize, PRIORITIES, priorityLabel } from '@/utils/labels';
 import { links } from '@/utils/links';
 
@@ -54,6 +54,7 @@ function TaskBody({ task }: { task: MaintenanceDto }) {
   const technicians = useAssignableUsers('TECHNICIAN', isManager && !terminal);
 
   const [pending, setPending] = useState<string | null>(null);
+  const inFlight = useRef(false);
   const [technicianId, setTechnicianId] = useState(task.assignedTechnicianId ?? '');
   const [priority, setPriority] = useState<Priority>(task.priority);
   const [due, setDue] = useState(toLocalInput(task.dueDate));
@@ -70,6 +71,9 @@ function TaskBody({ task }: { task: MaintenanceDto }) {
   useEffect(() => setFindings(task.inspectionFindings ?? ''), [task.inspectionFindings]);
 
   const patch = async (key: string, body: MaintenanceUpdateRequest, success: string, fail: string): Promise<boolean> => {
+    // Synchronous guard: one change at a time, even before the pending state re-renders.
+    if (inFlight.current) return false;
+    inFlight.current = true;
     setPending(key);
     try {
       await update.mutateAsync({ id: task.id, body });
@@ -79,6 +83,7 @@ function TaskBody({ task }: { task: MaintenanceDto }) {
       toast.error(fail, errorMessage(e, 'The change could not be saved.'));
       return false;
     } finally {
+      inFlight.current = false;
       setPending(null);
     }
   };
@@ -108,26 +113,51 @@ function TaskBody({ task }: { task: MaintenanceDto }) {
 
   return (
     <>
-      <DrawerSection title="Summary">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
+      <header className="relative border-b border-line px-5 pb-4 pt-4">
+        {task.overdue && !terminal && <span aria-hidden="true" className="absolute inset-y-0 left-0 w-[3px] bg-critical" />}
+        <p className="font-mono text-label uppercase text-fg-muted">
+          Task {shortId(task.id)} · created by {task.createdByName}
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <MaintenanceStatusBadge value={task.status} />
           <PriorityBadge value={task.priority} />
           {task.overdue && !terminal && <OverdueBadge />}
         </div>
-        {task.description && <p className="mb-4 whitespace-pre-wrap text-sm text-fg">{task.description}</p>}
-        <DetailGrid
+        {task.description && <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-fg">{task.description}</p>}
+        <p className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-fg-muted">
+          <Link to={links.transformer(task.transformerId)} className="font-mono font-medium text-accent-ink underline-offset-2 hover:underline">
+            {task.transformerCode}
+          </Link>
+          <span>{task.transformerName}</span>
+          <span aria-hidden="true">·</span>
+          <span>{task.location}</span>
+        </p>
+        <MetricStrip
+          className="mt-4"
           items={[
             {
-              label: 'Transformer',
-              value: (
-                <Link to={links.transformer(task.transformerId)} className="text-accent-ink hover:underline">
-                  {task.transformerCode} · {task.transformerName}
-                </Link>
-              ),
-              wide: true,
+              label: 'Due',
+              value: <span className={task.overdue && !terminal ? 'text-critical' : undefined}>{formatDate(task.dueDate)}</span>,
+              hint: `${formatTime(task.dueDate)}${terminal ? '' : ` · ${formatRelative(task.dueDate)}`}`,
             },
-            { label: 'Location', value: task.location },
-            { label: 'Technician', value: task.assignedTechnicianName ?? 'Unassigned' },
+            { label: 'Technician', value: <span className="text-base">{task.assignedTechnicianName ?? 'Unassigned'}</span> },
+            {
+              label: 'Work log',
+              value: `${formatNumber(task.workNotes.length)} / ${formatNumber(task.partsReplaced.length)}`,
+              hint: 'notes / parts',
+            },
+          ]}
+        />
+        {terminal && (
+          <p className="mt-3 border-l-2 border-line-strong pl-3 text-xs text-fg-muted">
+            This task is {task.status === 'COMPLETED' ? 'completed' : 'cancelled'} and read-only.
+          </p>
+        )}
+      </header>
+
+      <DrawerSection title="Details">
+        <DetailGrid
+          items={[
             {
               label: 'Due',
               value: (
@@ -148,7 +178,7 @@ function TaskBody({ task }: { task: MaintenanceDto }) {
               ),
             },
             { label: 'Created', value: `${formatDateTime(task.createdAt)} · ${task.createdByName}` },
-            { label: 'Updated', value: formatDateTime(task.updatedAt) },
+            { label: 'Last updated', value: formatDateTime(task.updatedAt) },
             ...(task.completedAt ? [{ label: 'Completed', value: formatDateTime(task.completedAt) }] : []),
             ...(task.cancelledAt
               ? [
@@ -158,7 +188,6 @@ function TaskBody({ task }: { task: MaintenanceDto }) {
               : []),
           ]}
         />
-        {terminal && <p className="mt-3 text-xs text-fg-muted">This task is {task.status === 'COMPLETED' ? 'completed' : 'cancelled'} and read-only.</p>}
       </DrawerSection>
 
       {!terminal && canProgress && (task.status === 'ASSIGNED' || task.status === 'IN_PROGRESS') && (
@@ -177,7 +206,7 @@ function TaskBody({ task }: { task: MaintenanceDto }) {
               </Button>
             )}
             {task.status === 'IN_PROGRESS' && (
-              <Button size="sm" variant="primary" icon={<CheckCircle2 />} onClick={() => setCompleteOpen(true)}>
+              <Button size="sm" variant="primary" icon={<CheckCircle2 />} disabled={!!pending} onClick={() => setCompleteOpen(true)}>
                 Complete
               </Button>
             )}
@@ -189,7 +218,7 @@ function TaskBody({ task }: { task: MaintenanceDto }) {
         <DrawerSection
           title="Manage"
           actions={
-            <Button size="sm" variant="danger" icon={<XCircle />} onClick={() => setCancelOpen(true)}>
+            <Button size="sm" variant="danger" icon={<XCircle />} disabled={!!pending} onClick={() => setCancelOpen(true)}>
               Cancel task
             </Button>
           }
@@ -302,7 +331,7 @@ function TaskBody({ task }: { task: MaintenanceDto }) {
             {[...task.workNotes]
               .sort((a, b) => a.at.localeCompare(b.at))
               .map((n, i) => (
-                <li key={`${n.at}-${i}`} className="rounded-sm border border-line bg-canvas/50 px-3 py-2">
+                <li key={`${n.at}-${i}`} className="rounded-sm border border-line bg-canvas px-3 py-2">
                   <p className="whitespace-pre-wrap text-sm text-fg">{n.text}</p>
                   <p className="mt-1 font-mono text-[0.7rem] text-fg-muted">
                     {n.authorName} · <time dateTime={n.at}>{formatDateTime(n.at)}</time>
@@ -343,10 +372,10 @@ function TaskBody({ task }: { task: MaintenanceDto }) {
         )}
         {!terminal && canProgress && (
           <form className="grid grid-cols-[1fr_5rem] gap-2" onSubmit={submitPart} aria-label="Add part" noValidate>
-            <Field label="Part name" error={partError && !part.name.trim() ? partError : undefined}>
+            <Field label="Part name" required error={partError && !part.name.trim() ? partError : undefined}>
               <Input value={part.name} onChange={(e) => setPart({ ...part, name: e.target.value })} />
             </Field>
-            <Field label="Qty" error={partError && part.name.trim() ? partError : undefined}>
+            <Field label="Qty" required error={partError && part.name.trim() ? partError : undefined}>
               <Input type="number" min={1} step={1} inputMode="numeric" value={part.quantity} onChange={(e) => setPart({ ...part, quantity: e.target.value })} />
             </Field>
             <Field label="Part notes" className="col-span-2">
