@@ -27,3 +27,4 @@ export * from './Spinner';
 export * from './useNow';
 export * from './useFocusTrap';
 export * from './FilterBar';
+export * from './ConfirmDialog';

@@ -1,17 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ApiError } from '@/services/apiClient';
 import { useMaintenanceActions } from '@/hooks/useWorkflows';
 import type { MaintenanceDto } from '@/types/api';
-import { Button } from '@/components/ui/Button';
-import { Dialog } from '@/components/ui/Dialog';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { errorMessage } from '@/components/ui/ErrorState';
 import { Field } from '@/components/ui/Field';
 import { Textarea } from '@/components/ui/Textarea';
 import { useToast } from '@/components/ui/Toast';
-import { FormError } from '@/components/workflow/DetailBits';
 
 interface TaskDialogProps {
   task: MaintenanceDto;
@@ -19,56 +17,55 @@ interface TaskDialogProps {
   onClose: () => void;
 }
 
-const cancelSchema = z.object({
-  cancelReason: z.string().trim().min(3, 'A cancellation reason is required').max(1000, 'Reason must be at most 1000 characters'),
-});
-type CancelValues = z.infer<typeof cancelSchema>;
-
-/** Cancel a task with a required reason (ADMIN/ENGINEER). */
+/** Cancel a task with a required reason (ADMIN/ENGINEER). Irreversible, so it uses the danger confirm. */
 export function CancelTaskDialog({ task, open, onClose }: TaskDialogProps) {
   const { update } = useMaintenanceActions();
   const toast = useToast();
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setError,
-    formState: { errors, isSubmitting },
-  } = useForm<CancelValues>({ resolver: zodResolver(cancelSchema), defaultValues: { cancelReason: '' } });
+  const [error, setError] = useState<string>();
+  const [fieldError, setFieldError] = useState<string>();
 
   useEffect(() => {
-    if (open) reset({ cancelReason: '' });
-  }, [open, reset]);
+    if (open) {
+      setError(undefined);
+      setFieldError(undefined);
+    }
+  }, [open]);
 
-  const submit = async (v: CancelValues) => {
+  const confirm = async (reason: string) => {
+    setError(undefined);
+    setFieldError(undefined);
     try {
-      await update.mutateAsync({ id: task.id, body: { status: 'CANCELLED', cancelReason: v.cancelReason.trim() } });
+      await update.mutateAsync({ id: task.id, body: { status: 'CANCELLED', cancelReason: reason } });
       toast.success('Task cancelled', task.title);
       onClose();
     } catch (e) {
       const fe = e instanceof ApiError ? e.fieldErrors.find((f) => f.field === 'cancelReason') : undefined;
-      if (fe) setError('cancelReason', { type: 'server', message: fe.message });
-      else setError('root.server', { type: 'server', message: errorMessage(e, 'Could not cancel the task.') });
+      if (fe) setFieldError(fe.message);
+      else setError(errorMessage(e, 'Could not cancel the task.'));
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} size="sm" title="Cancel task" description={`${task.title} · ${task.transformerCode}. Cancelled tasks cannot be reopened.`} dismissible={!isSubmitting}>
-      <form noValidate onSubmit={handleSubmit(submit)} className="flex flex-col gap-3" aria-label="Cancel task">
-        <FormError message={errors.root?.server?.message} />
-        <Field label="Reason" required error={errors.cancelReason?.message}>
-          <Textarea rows={3} {...register('cancelReason')} />
-        </Field>
-        <div className="mt-2 flex justify-end gap-2 border-t border-line pt-4">
-          <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>
-            Keep task
-          </Button>
-          <Button type="submit" variant="danger" loading={isSubmitting}>
-            Cancel task
-          </Button>
-        </div>
-      </form>
-    </Dialog>
+    <ConfirmDialog
+      open={open}
+      onClose={onClose}
+      onConfirm={confirm}
+      tone="danger"
+      title="Cancel task"
+      description={`${task.title} · ${task.transformerCode}. Cancelled tasks cannot be reopened.`}
+      confirmLabel="Cancel task"
+      cancelLabel="Keep task"
+      error={error}
+      reasonError={fieldError}
+      reason={{
+        label: 'Reason',
+        required: true,
+        minLength: 3,
+        maxLength: 1000,
+        requiredMessage: 'A cancellation reason is required',
+        hint: 'Recorded in the task history.',
+      }}
+    />
   );
 }
 
@@ -78,7 +75,7 @@ const completeSchema = z.object({
 });
 type CompleteValues = z.infer<typeof completeSchema>;
 
-/** Complete an IN_PROGRESS task with optional findings and a closing note. */
+/** Complete an IN_PROGRESS task with optional findings and a closing note. Input is kept if the request fails. */
 export function CompleteTaskDialog({ task, open, onClose }: TaskDialogProps) {
   const { complete } = useMaintenanceActions();
   const toast = useToast();
@@ -109,24 +106,24 @@ export function CompleteTaskDialog({ task, open, onClose }: TaskDialogProps) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="Complete task" description={`${task.title} · ${task.transformerCode}`} dismissible={!isSubmitting}>
-      <form noValidate onSubmit={handleSubmit(submit)} className="flex flex-col gap-3" aria-label="Complete task">
-        <FormError message={errors.root?.server?.message} />
-        <Field label="Inspection findings" error={errors.inspectionFindings?.message} hint="Optional.">
-          <Textarea rows={4} {...register('inspectionFindings')} />
-        </Field>
-        <Field label="Closing note" error={errors.workNote?.message} hint="Optional. Added to the work notes.">
-          <Textarea rows={3} {...register('workNote')} />
-        </Field>
-        <div className="mt-2 flex justify-end gap-2 border-t border-line pt-4">
-          <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>
-            Back
-          </Button>
-          <Button type="submit" variant="primary" loading={isSubmitting}>
-            Mark complete
-          </Button>
-        </div>
-      </form>
-    </Dialog>
+    <ConfirmDialog
+      open={open}
+      onClose={onClose}
+      onConfirm={() => handleSubmit(submit)()}
+      size="md"
+      title="Complete task"
+      description={`${task.title} · ${task.transformerCode}. Completed tasks become read-only.`}
+      confirmLabel="Mark complete"
+      cancelLabel="Back"
+      loading={isSubmitting}
+      error={errors.root?.server?.message}
+    >
+      <Field label="Inspection findings" error={errors.inspectionFindings?.message} hint="Optional.">
+        <Textarea rows={4} {...register('inspectionFindings')} />
+      </Field>
+      <Field label="Closing note" error={errors.workNote?.message} hint="Optional. Added to the work notes.">
+        <Textarea rows={3} {...register('workNote')} />
+      </Field>
+    </ConfirmDialog>
   );
 }

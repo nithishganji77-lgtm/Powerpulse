@@ -5,7 +5,7 @@ import { Drawer } from '@/components/ui/Drawer';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SeverityBadge } from '@/components/ui/StatusBadges';
 import { Table, type Column } from '@/components/ui/Table';
-import { DetailGrid, DrawerSection, shortId } from '@/components/workflow/DetailBits';
+import { DetailGrid, DrawerSection, MetricStrip, shortId } from '@/components/workflow/DetailBits';
 import { formatAmps, formatDateTime, formatDuration, formatPct, formatPf, formatTemp, formatVolts, formatWithUnit } from '@/utils/format';
 import { faultTypeLabel, readingSourceLabel } from '@/utils/labels';
 import { links } from '@/utils/links';
@@ -45,12 +45,28 @@ export function IncidentDetailDrawer({ focusId, incident, onClose }: IncidentDet
         />
       ) : (
         <>
-          <DrawerSection title="Summary">
-            <div className="mb-3 flex flex-wrap items-center gap-2">
+          <header className="relative border-b border-line px-5 pb-4 pt-4">
+            {!incident.resolvedAt && incident.severity === 'CRITICAL' && (
+              <span aria-hidden="true" className="absolute inset-y-0 left-0 w-[3px] bg-critical" />
+            )}
+            <p className="font-mono text-label uppercase text-fg-muted">
+              Incident {shortId(incident.id)} · {incident.transformerCode} · {incident.location}
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <SeverityBadge value={incident.severity} />
               {incident.resolvedAt ? <Badge tone="healthy">Resolved</Badge> : <Badge tone="warning">Ongoing</Badge>}
               {incident.recurrenceCount > 0 && <Badge tone="warning">Recurrence ×{incident.recurrenceCount}</Badge>}
             </div>
+            <MetricStrip
+              className="mt-4"
+              items={[
+                { label: 'Peak', value: formatWithUnit(incident.peakValue, incident.unit) },
+                { label: 'Threshold', value: formatWithUnit(incident.threshold, incident.unit) },
+                { label: 'Duration', value: incident.resolvedAt ? formatDuration(incident.durationSeconds) : 'Ongoing' },
+              ]}
+            />
+          </header>
+          <DrawerSection title="Record">
             <DetailGrid
               items={[
                 {
@@ -64,8 +80,6 @@ export function IncidentDetailDrawer({ focusId, incident, onClose }: IncidentDet
                 { label: 'Location', value: incident.location },
                 { label: 'Started', value: formatDateTime(incident.startedAt) },
                 { label: 'Resolved', value: incident.resolvedAt ? formatDateTime(incident.resolvedAt) : 'Ongoing' },
-                { label: 'Duration', value: incident.resolvedAt ? formatDuration(incident.durationSeconds) : 'Ongoing' },
-                { label: 'Peak / threshold', value: `${formatWithUnit(incident.peakValue, incident.unit)} / ${formatWithUnit(incident.threshold, incident.unit)}` },
                 {
                   label: 'Alert',
                   value: (
@@ -99,7 +113,7 @@ export function IncidentDetailDrawer({ focusId, incident, onClose }: IncidentDet
             {incident.actionsTaken.length === 0 ? (
               <p className="text-xs text-fg-muted">No actions recorded.</p>
             ) : (
-              <ul className="list-disc space-y-1 pl-5 text-sm text-fg">
+              <ul className="list-disc space-y-1 pl-5 text-[0.8125rem] leading-relaxed text-fg marker:text-fg-muted">
                 {incident.actionsTaken.map((a, i) => (
                   <li key={i}>{a}</li>
                 ))}

@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { AlertOctagon } from 'lucide-react';
 import { useMaintenanceActions } from '@/hooks/useWorkflows';
 import { useAssignableUsers } from '@/hooks/useAdmin';
 import { ApiError } from '@/services/apiClient';
@@ -17,6 +16,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { useToast } from '@/components/ui/Toast';
 import { fromLocalInput, toLocalInput } from '@/utils/format';
 import { PRIORITIES, priorityLabel } from '@/utils/labels';
+import { FormError } from '@/components/workflow/DetailBits';
 
 const schema = z.object({
   title: z.string().trim().min(3, 'Title must be at least 3 characters').max(120, 'Title must be at most 120 characters'),
@@ -121,12 +121,7 @@ export function MaintenanceCreateDialog(props: MaintenanceCreateDialogProps) {
       dismissible={!isSubmitting}
     >
       <form noValidate onSubmit={handleSubmit(submit)} className="flex flex-col gap-3" aria-label="Create maintenance task">
-        {errors.root?.server?.message && (
-          <div role="alert" className="flex items-start gap-2 rounded-sm border border-critical/50 bg-critical/10 px-3 py-2 text-sm text-critical">
-            <AlertOctagon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
-            {errors.root.server.message}
-          </div>
-        )}
+        <FormError message={errors.root?.server?.message} />
         <Field label="Title" required error={errors.title?.message}>
           <Input autoComplete="off" {...register('title')} />
         </Field>
@@ -162,7 +157,10 @@ export function MaintenanceCreateDialog(props: MaintenanceCreateDialogProps) {
             ))}
           </Select>
         </Field>
-        <div className="mt-2 flex justify-end gap-2 border-t border-line pt-4">
+        <p className="text-xs text-fg-muted">
+          <span aria-hidden="true" className="text-accent-ink">*</span> Required
+        </p>
+        <div className="-mx-5 -mb-4 flex justify-end gap-2 border-t border-line px-5 py-3">
           <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
