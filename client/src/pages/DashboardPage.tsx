@@ -147,11 +147,12 @@ export default function DashboardPage() {
 
       <section aria-label="Triage" className="flex flex-col gap-2">
         <SectionLabel>Triage</SectionLabel>
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-12">
-          <div className="min-w-0 xl:col-span-7 [&>section]:h-full">
+        {/* Side by side only on 2xl: the attention table needs ~7 columns to stay scannable. */}
+        <div className="grid grid-cols-1 gap-3 2xl:grid-cols-12">
+          <div className="min-w-0 2xl:col-span-7 [&>section]:h-full">
             <AttentionList filters={filters} />
           </div>
-          <div className="min-w-0 xl:col-span-5 [&>section]:h-full">
+          <div className="min-w-0 2xl:col-span-5 [&>section]:h-full">
             {summary.isPending ? (
               <Panel title="Recent alerts">
                 <LoadingBlock lines={5} label="Loading recent alerts" />

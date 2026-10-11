@@ -16,7 +16,7 @@ import { LoadingBlock } from '@/components/ui/Skeleton';
 import { SeverityBadge } from '@/components/ui/StatusBadges';
 import { useNow } from '@/components/ui/useNow';
 import { IncidentDetailDrawer } from '@/components/faulthistory/IncidentDetailDrawer';
-import { FilterBar } from '@/components/workflow/FilterBar';
+import { FilterBar } from '@/components/ui/FilterBar';
 import { EnumFilter, LocationFilter, TransformerFilter } from '@/components/workflow/FilterControls';
 import { RelativeTime } from '@/components/workflow/RelativeTime';
 import { RowList, type RowColumn } from '@/components/workflow/RowList';
@@ -212,7 +212,7 @@ export default function FaultHistoryPage() {
         ]}
       />
 
-      <FilterBar label="Incident filters" activeCount={activeFilters} onReset={clearFilters} bodyClassName="grid-cols-2 md:grid-cols-4 xl:grid-cols-12">
+      <FilterBar layout="stacked" label="Incident filters" activeCount={activeFilters} onReset={clearFilters} bodyClassName="grid-cols-2 md:grid-cols-4 xl:grid-cols-12">
         <TransformerFilter value={get('transformerId') ?? ''} onChange={setFilter('transformerId')} className="col-span-2 xl:col-span-3" />
         <LocationFilter value={get('location') ?? ''} onChange={setFilter('location')} className="col-span-2 xl:col-span-3" />
         <EnumFilter label="Fault type" value={params.faultType ?? ''} onChange={setFilter('faultType')} options={FAULT_TYPES} labels={faultTypeLabel} className="md:col-span-2 xl:col-span-3" />

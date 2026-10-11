@@ -21,7 +21,8 @@ import { useNow } from '@/components/ui/useNow';
 import { AlertDetailDrawer } from '@/components/alerts/AlertDetailDrawer';
 import { AlertWorkflowMeter } from '@/components/alerts/AlertWorkflow';
 import { RecoveredBadge } from '@/components/alerts/RecoveredBadge';
-import { FilterBar, ToggleFilter } from '@/components/workflow/FilterBar';
+import { FilterBar } from '@/components/ui/FilterBar';
+import { ToggleFilter } from '@/components/workflow/FilterBar';
 import { EnumFilter, LocationFilter, TransformerFilter } from '@/components/workflow/FilterControls';
 import { LiveStamp } from '@/components/workflow/LiveStamp';
 import { RelativeTime } from '@/components/workflow/RelativeTime';
@@ -253,6 +254,7 @@ export default function AlertsPage() {
       />
 
       <FilterBar
+        layout="stacked"
         label="Alert filters"
         activeCount={activeFilters}
         onReset={clearFilters}

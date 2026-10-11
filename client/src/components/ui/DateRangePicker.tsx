@@ -58,8 +58,8 @@ export function DateRangePicker({
   const none = !value.from && !value.to;
   const chip = (selected: boolean) =>
     clsx(
-      'h-7 rounded-sm px-2 font-mono text-xs transition-colors duration-fast',
-      selected ? 'bg-accent text-ink' : 'text-fg-muted hover:bg-raised hover:text-fg',
+      'h-8 rounded-sm px-2.5 font-mono text-xs transition-colors duration-fast',
+      selected ? 'bg-ink text-paper' : 'text-fg-muted hover:bg-raised hover:text-fg',
     );
   return (
     <fieldset className={clsx('flex min-w-0 flex-wrap items-center gap-2', className)}>
@@ -93,7 +93,7 @@ export function DateRangePicker({
             value={toLocalInput(value.from)}
             max={toLocalInput(value.to) || undefined}
             onChange={(e) => onChange({ ...value, from: fromLocalInput(e.target.value) })}
-            className="h-8 min-w-0 rounded-sm border border-line bg-canvas px-2 font-mono text-xs text-fg [color-scheme:light]"
+            className="h-9 min-w-0 rounded-sm border border-line bg-panel px-2 font-mono text-xs text-fg [color-scheme:light]"
           />
           <span aria-hidden="true" className="text-fg-muted">
             →
@@ -107,7 +107,7 @@ export function DateRangePicker({
             value={toLocalInput(value.to)}
             min={toLocalInput(value.from) || undefined}
             onChange={(e) => onChange({ ...value, to: fromLocalInput(e.target.value) })}
-            className="h-8 min-w-0 rounded-sm border border-line bg-canvas px-2 font-mono text-xs text-fg [color-scheme:light]"
+            className="h-9 min-w-0 rounded-sm border border-line bg-panel px-2 font-mono text-xs text-fg [color-scheme:light]"
           />
         </div>
       )}

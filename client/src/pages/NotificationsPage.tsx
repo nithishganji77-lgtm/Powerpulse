@@ -19,7 +19,7 @@ import { useToast } from '@/components/ui/Toast';
 import { toneChip, toneText } from '@/components/ui/tone';
 import { useNow } from '@/components/ui/useNow';
 import { dayKey, dayLabel, notificationMeta } from '@/components/notifications/notificationMeta';
-import { FilterBar } from '@/components/workflow/FilterBar';
+import { FilterBar } from '@/components/ui/FilterBar';
 import { EnumFilter } from '@/components/workflow/FilterControls';
 import { formatDateTime, formatNumber, formatRelative } from '@/utils/format';
 import { notificationTypeLabel } from '@/utils/labels';
@@ -115,7 +115,7 @@ export default function NotificationsPage() {
         }
       />
 
-      <FilterBar label="Notification filters" activeCount={activeFilters} onReset={clearFilters} bodyClassName="grid-cols-2 md:grid-cols-4">
+      <FilterBar layout="stacked" label="Notification filters" activeCount={activeFilters} onReset={clearFilters} bodyClassName="grid-cols-2 md:grid-cols-4">
         <Field label="Show">
           <Select value={readFilter ?? ''} onChange={(e) => set({ read: e.target.value }, { resetPage: true })}>
             <option value="">All</option>

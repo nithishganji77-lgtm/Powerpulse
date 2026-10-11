@@ -25,7 +25,7 @@ import { useNow } from '@/components/ui/useNow';
 import { MaintenanceDetailDrawer } from '@/components/maintenance/MaintenanceDetailDrawer';
 import { NewMaintenanceTaskDialog } from '@/components/maintenance/NewMaintenanceTaskDialog';
 import { shortId } from '@/components/workflow/DetailBits';
-import { FilterBar } from '@/components/workflow/FilterBar';
+import { FilterBar } from '@/components/ui/FilterBar';
 import { EnumFilter, TransformerFilter } from '@/components/workflow/FilterControls';
 import { LiveStamp } from '@/components/workflow/LiveStamp';
 import { RowList, type RowColumn } from '@/components/workflow/RowList';
@@ -253,7 +253,7 @@ export default function MaintenancePage() {
         ]}
       />
 
-      <FilterBar label="Task filters" activeCount={activeFilters} onReset={clearFilters} bodyClassName="grid-cols-2 md:grid-cols-4 xl:grid-cols-12">
+      <FilterBar layout="stacked" label="Task filters" activeCount={activeFilters} onReset={clearFilters} bodyClassName="grid-cols-2 md:grid-cols-4 xl:grid-cols-12">
         <Field label="Search" className={isTechnician ? 'col-span-2 md:col-span-4 xl:col-span-5' : 'col-span-2 md:col-span-4 xl:col-span-4'}>
           <Input type="search" leading={<Search />} placeholder="Title or transformer" value={q} onChange={(e) => setQ(e.target.value)} />
         </Field>
