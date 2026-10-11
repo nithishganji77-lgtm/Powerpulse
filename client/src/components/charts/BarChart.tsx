@@ -36,7 +36,7 @@ export interface BarChartProps<T> {
   label: string;
 }
 
-/** Bar chart (vertical or horizontal), integer counts, dark theme, per-bar hover tooltip. */
+/** Bar chart (vertical or horizontal), integer counts, per-bar hover tooltip. */
 export function BarChart<T extends Record<string, unknown>>({
   data,
   categoryKey,
@@ -90,7 +90,7 @@ export function BarChart<T extends Record<string, unknown>>({
             barCategoryGap="25%"
             barGap={2}
           >
-            <CartesianGrid stroke={chartTheme.grid} strokeDasharray="2 4" horizontal={!horizontal} vertical={!!horizontal} />
+            <CartesianGrid stroke={chartTheme.grid} strokeOpacity={0.7} horizontal={!horizontal} vertical={!!horizontal} />
             {horizontal ? (
               <>
                 <XAxis

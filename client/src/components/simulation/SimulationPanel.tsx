@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Pause, Play, PlayCircle, RotateCcw } from 'lucide-react';
 import { useAllTransformers, useSimulationControl, useSimulationStatus } from '@/hooks/useMonitoring';
@@ -17,39 +17,40 @@ import { formatNumber } from '@/utils/format';
 import { links } from '@/utils/links';
 import type { ScenarioName, SimulationStatus } from '@/types/api';
 
+function Cell({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="min-w-0 bg-panel px-4 py-3">
+      <dt className="font-mono text-label uppercase text-fg-muted">{label}</dt>
+      <dd className="mt-1.5 text-sm">{children}</dd>
+    </div>
+  );
+}
+
 function StatusSummary({ status }: { status: SimulationStatus }) {
   return (
-    <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-4">
-      <div>
-        <dt className="font-mono text-label uppercase text-fg-muted">State</dt>
-        <dd className="mt-1">
-          {!status.enabled ? (
-            <Badge tone="offline">Disabled</Badge>
-          ) : status.running ? (
-            <Badge tone="accent" icon={<Play aria-hidden="true" />}>
-              Running
-            </Badge>
-          ) : (
-            <Badge tone="warning" icon={<Pause aria-hidden="true" />}>
-              Paused
-            </Badge>
-          )}
-        </dd>
-      </div>
-      <div>
-        <dt className="font-mono text-label uppercase text-fg-muted">Tick</dt>
-        <dd className="tabular mt-1 font-mono">{formatNumber(status.tick)}</dd>
-      </div>
-      <div>
-        <dt className="font-mono text-label uppercase text-fg-muted">Interval</dt>
-        <dd className="tabular mt-1 font-mono">{formatNumber(status.intervalSeconds)} s</dd>
-      </div>
-      <div>
-        <dt className="font-mono text-label uppercase text-fg-muted">Last tick</dt>
-        <dd className="mt-1">
-          <Freshness at={status.lastTickAt} bare />
-        </dd>
-      </div>
+    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-line bg-line sm:grid-cols-4">
+      <Cell label="State">
+        {!status.enabled ? (
+          <Badge tone="offline">Disabled</Badge>
+        ) : status.running ? (
+          <Badge tone="accent" icon={<Play aria-hidden="true" />}>
+            Running
+          </Badge>
+        ) : (
+          <Badge tone="warning" icon={<Pause aria-hidden="true" />}>
+            Paused
+          </Badge>
+        )}
+      </Cell>
+      <Cell label="Tick">
+        <span className="tabular font-mono">{formatNumber(status.tick)}</span>
+      </Cell>
+      <Cell label="Interval">
+        <span className="tabular font-mono">{formatNumber(status.intervalSeconds)} s</span>
+      </Cell>
+      <Cell label="Last tick">
+        <Freshness at={status.lastTickAt} bare />
+      </Cell>
     </dl>
   );
 }
@@ -57,19 +58,23 @@ function StatusSummary({ status }: { status: SimulationStatus }) {
 function ActiveScenarios({ status }: { status: SimulationStatus }) {
   return (
     <div>
-      <h3 className="font-mono text-label uppercase text-fg-muted">Active scenarios</h3>
+      <h3 className="font-mono text-label uppercase text-fg-muted">
+        Active scenarios <span className="tabular text-fg">· {formatNumber(status.scenarios.length)}</span>
+      </h3>
       {status.scenarios.length === 0 ? (
         <p className="mt-1.5 text-xs text-fg-muted">None — all transformers follow nominal simulated behavior.</p>
       ) : (
-        <ul className="mt-1.5 flex flex-col gap-1">
+        <ul className="mt-2 grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-line bg-line sm:grid-cols-2">
           {status.scenarios.map((s) => (
-            <li key={`${s.transformerId}-${s.name}`} className="flex flex-wrap items-center gap-2 text-sm">
+            <li key={`${s.transformerId}-${s.name}`} className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 bg-panel px-3 py-2 text-sm">
               <Link to={links.transformer(s.transformerId)} className="font-mono text-xs text-accent-ink hover:underline">
                 {s.transformerCode}
               </Link>
               <span className="text-fg">{scenarioLabel[s.name] ?? s.name}</span>
-              <span className="font-mono text-xs text-fg-muted">step {s.step}</span>
-              <Freshness at={s.startedAt} bare />
+              <span className="ml-auto flex items-center gap-2">
+                <span className="tabular font-mono text-xs text-fg-muted">step {s.step}</span>
+                <Freshness at={s.startedAt} bare />
+              </span>
             </li>
           ))}
         </ul>
@@ -113,7 +118,8 @@ function Controls({ status }: { status: SimulationStatus }) {
 
   return (
     <div className="flex flex-col gap-4 border-t border-line pt-4">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="mr-1 font-mono text-label uppercase text-fg-muted">Simulator</span>
         <Button
           variant="secondary"
           size="sm"
@@ -193,9 +199,10 @@ export function SimulationPanel({ id = 'simulation' }: { id?: string }) {
   return (
     <Panel
       id={id}
-      eyebrow={<SimulatedBadge />}
+      eyebrow="Data source"
       title="Simulation control"
       description="Readings in this environment are generated by the PowerPulse simulator, not real IoT telemetry."
+      actions={<SimulatedBadge />}
     >
       {status.isPending ? (
         <LoadingBlock label="Loading simulation status" lines={3} />

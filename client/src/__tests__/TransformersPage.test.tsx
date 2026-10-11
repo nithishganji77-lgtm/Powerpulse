@@ -82,4 +82,26 @@ describe('TransformersPage', () => {
     await userEvent.click(await screen.findByRole('button', { name: /register transformer/i }));
     expect(screen.getByRole('dialog', { name: /register transformer/i })).toBeInTheDocument();
   });
+
+  it('resets every filter (but keeps sort) from the filter bar', async () => {
+    renderWithProviders(<TransformersPage />, {
+      route: '/transformers?status=OFFLINE&location=Harbour&maxHealth=50&sort=code,asc',
+      path: '/transformers',
+    });
+    await screen.findByText('PP-TX-001');
+    expect(screen.getByText('filters active')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /reset filters/i }));
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/transformers?sort=code%2Casc'));
+    await waitFor(() => expect(list).toHaveBeenLastCalledWith({ page: 0, size: 20, sort: 'code,asc' }));
+  });
+
+  it('shows the asset count and stacked rows with stale readings marked on narrow screens', async () => {
+    list.mockResolvedValue(page([makeTransformer({ stale: true })], { totalElements: 42 }));
+    renderWithProviders(<TransformersPage />, { route: '/transformers', path: '/transformers' });
+    const row = await screen.findByRole('link', { name: 'Open PP-TX-001 Riverside 1' });
+    expect(row).toHaveAttribute('href', '/transformers/t1');
+    expect(row).toHaveTextContent(/stale/i);
+    expect(screen.getByText('42')).toBeInTheDocument();
+    expect(screen.getByText('registered assets')).toBeInTheDocument();
+  });
 });

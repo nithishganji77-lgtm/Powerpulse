@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTransformerReadings } from '@/hooks/useMonitoring';
+import { formatDateTime, formatNumber, formatWithUnit } from '@/utils/format';
 import type { ReadingDto, SystemSettingsDto, TransformerDetailDto } from '@/types/api';
 import { Panel } from '@/components/ui/Panel';
 import { Tabs } from '@/components/ui/Tabs';
@@ -7,16 +8,16 @@ import { DateRangePicker, presetRange, type DateRange } from '@/components/ui/Da
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { seriesColors, TimeSeriesChart, type ReferenceMark } from '@/components/charts';
+import { metricColors, TimeSeriesChart, type MetricColorKey, type ReferenceMark } from '@/components/charts';
 
 type Metric = 'temperatureC' | 'oilLevelPct' | 'voltageV' | 'currentA' | 'loadPct';
 
-const METRICS: { id: Metric; label: string; unit: string; axis: string; digits: number }[] = [
-  { id: 'temperatureC', label: 'Temperature', unit: '°C', axis: 'Temperature (°C)', digits: 1 },
-  { id: 'oilLevelPct', label: 'Oil level', unit: '%', axis: 'Oil level (%)', digits: 1 },
-  { id: 'voltageV', label: 'Voltage', unit: 'V', axis: 'Voltage (V)', digits: 0 },
-  { id: 'currentA', label: 'Current', unit: 'A', axis: 'Current (A)', digits: 0 },
-  { id: 'loadPct', label: 'Load', unit: '%', axis: 'Load (%)', digits: 1 },
+const METRICS: { id: Metric; label: string; unit: string; axis: string; digits: number; color: MetricColorKey }[] = [
+  { id: 'temperatureC', label: 'Temperature', unit: '°C', axis: 'Temperature (°C)', digits: 1, color: 'temperature' },
+  { id: 'oilLevelPct', label: 'Oil level', unit: '%', axis: 'Oil level (%)', digits: 1, color: 'secondary' },
+  { id: 'voltageV', label: 'Voltage', unit: 'V', axis: 'Voltage (V)', digits: 0, color: 'neutral' },
+  { id: 'currentA', label: 'Current', unit: 'A', axis: 'Current (A)', digits: 0, color: 'neutral' },
+  { id: 'loadPct', label: 'Load', unit: '%', axis: 'Load (% of rated)', digits: 1, color: 'load' },
 ];
 
 /**
@@ -43,7 +44,7 @@ function referencesFor(metric: Metric, t: TransformerDetailDto, settings?: Syste
       ] : [];
     case 'voltageV': {
       const rated = t.secondaryVoltageV;
-      const refs: ReferenceMark[] = [{ y: rated, label: 'Rated', tone: 'steel' }];
+      const refs: ReferenceMark[] = [{ y: rated, label: 'Rated', tone: 'neutral' }];
       if (th) {
         const c = th.voltageDeviationPct.critical / 100;
         refs.push({ y: rated * (1 + c), label: 'Critical +', tone: 'critical' }, { y: rated * (1 - c), label: 'Critical −', tone: 'critical' });
@@ -52,7 +53,7 @@ function referencesFor(metric: Metric, t: TransformerDetailDto, settings?: Syste
     }
     case 'currentA': {
       const rated = t.ratedCurrentA;
-      const refs: ReferenceMark[] = [{ y: rated, label: 'Rated', tone: 'steel' }];
+      const refs: ReferenceMark[] = [{ y: rated, label: 'Rated', tone: 'neutral' }];
       if (th) refs.push({ y: (rated * th.currentPctOfRated.critical) / 100, label: 'Critical', tone: 'critical' });
       return refs;
     }
@@ -68,6 +69,7 @@ export function ReadingHistory({ transformer, settings }: { transformer: Transfo
 
   return (
     <Panel
+      eyebrow="Telemetry history"
       title="Reading history"
       description={
         settings
@@ -98,7 +100,16 @@ export function ReadingHistory({ transformer, settings }: { transformer: Transfo
             digits={m.digits}
             height={260}
             references={references}
-            series={[{ key: metric, label: m.label, color: seriesColors.primary }]}
+            series={[{ key: metric, label: m.label, color: metricColors[m.color] }]}
+            caption={(() => {
+              const last = readings.data[readings.data.length - 1];
+              return (
+                <>
+                  {formatNumber(readings.data.length)} readings · latest {formatWithUnit(last[metric], m.unit, m.digits)} at{' '}
+                  {formatDateTime(last.recordedAt)}
+                </>
+              );
+            })()}
           />
         )}
       </Tabs>

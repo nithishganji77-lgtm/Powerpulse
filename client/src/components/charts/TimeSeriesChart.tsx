@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import {
   CartesianGrid,
   Line,
@@ -44,9 +44,11 @@ export interface TimeSeriesChartProps<T> {
   yDomain?: [number | 'auto', number | 'auto'];
   /** Accessible description of the chart. */
   label: string;
+  /** Optional visible text summary under the plot (rendered as the figure caption). */
+  caption?: ReactNode;
 }
 
-/** Line chart over time, dark-themed, with units in axis + tooltip and optional threshold lines. */
+/** Line chart over time, with units in axis + tooltip and optional threshold lines. */
 export function TimeSeriesChart<T extends Record<string, unknown>>({
   data,
   xKey,
@@ -58,6 +60,7 @@ export function TimeSeriesChart<T extends Record<string, unknown>>({
   references = [],
   yDomain,
   label,
+  caption,
 }: TimeSeriesChartProps<T>) {
   const points = useMemo(
     () => data.map((d) => ({ ...d, __t: new Date(String(d[xKey])).getTime() })),
@@ -93,10 +96,10 @@ export function TimeSeriesChart<T extends Record<string, unknown>>({
   return (
     <div className="flex flex-col gap-2">
       <ChartLegend items={series.map((s) => ({ label: s.label, color: s.color, dashed: s.dashed }))} />
-      <ChartFrame height={height} label={label}>
+      <ChartFrame height={height} label={label} caption={caption}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={points} margin={{ top: 8, right: 12, bottom: 4, left: 4 }}>
-            <CartesianGrid stroke={chartTheme.grid} strokeDasharray="2 4" vertical={false} />
+            <CartesianGrid stroke={chartTheme.grid} strokeOpacity={0.7} vertical={false} />
             <XAxis
               dataKey="__t"
               type="number"
@@ -143,7 +146,7 @@ export function TimeSeriesChart<T extends Record<string, unknown>>({
                 dataKey={s.key}
                 name={s.label}
                 stroke={s.color}
-                strokeWidth={2}
+                strokeWidth={s.dashed ? 1.5 : 2}
                 strokeDasharray={s.dashed ? '5 4' : undefined}
                 dot={false}
                 activeDot={{ r: 4, stroke: 'rgb(var(--panel))', strokeWidth: 2 }}

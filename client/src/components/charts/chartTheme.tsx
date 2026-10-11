@@ -31,6 +31,19 @@ export const metricColors = {
   neutral: 'rgb(var(--chart-neutral))',
 } as const;
 
+export type MetricColorKey = keyof typeof metricColors;
+
+/**
+ * Lighter tint of a metric color, for a secondary series of the SAME metric (e.g. "max" next to
+ * "average"). Pair it with `dashed: true` so the two series differ by more than lightness.
+ */
+export const metricTints: Record<MetricColorKey, string> = {
+  temperature: 'rgb(var(--chart-temp) / 0.6)',
+  load: 'rgb(var(--chart-load) / 0.6)',
+  secondary: 'rgb(var(--chart-secondary) / 0.6)',
+  neutral: 'rgb(var(--chart-neutral) / 0.6)',
+};
+
 export const axisProps = {
   stroke: chartTheme.grid,
   tick: { fill: chartTheme.text, fontSize: chartTheme.fontSize, fontFamily: chartTheme.fontFamily },
@@ -93,13 +106,27 @@ export function TooltipCard({ title, rows }: { title: ReactNode; rows: { label: 
   );
 }
 
-/** Fixed-height frame; Recharts' ResponsiveContainer needs a sized parent. */
-export function ChartFrame({ height = 240, children, label }: { height?: number; children: ReactNode; label: string }) {
+/**
+ * Fixed-height frame; Recharts' ResponsiveContainer needs a sized parent.
+ * `caption` renders a short visible text summary (e.g. latest values) as the figure's <figcaption>.
+ */
+export function ChartFrame({
+  height = 240,
+  children,
+  label,
+  caption,
+}: {
+  height?: number;
+  children: ReactNode;
+  label: string;
+  caption?: ReactNode;
+}) {
   return (
     <figure className="m-0 min-w-0" aria-label={label}>
       <div style={{ height }} className="w-full min-w-0">
         {children}
       </div>
+      {caption && <figcaption className="mt-2 font-mono text-[0.6875rem] leading-4 text-fg-muted">{caption}</figcaption>}
     </figure>
   );
 }

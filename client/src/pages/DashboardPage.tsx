@@ -1,22 +1,25 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useDashboardSummary, useLocations } from '@/hooks/useMonitoring';
+import { qk } from '@/hooks/queryKeys';
 import { useUrlState } from '@/hooks/useUrlState';
 import type { DashboardFilters, TransformerStatus } from '@/types/api';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
-import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Field } from '@/components/ui/Field';
+import { FilterBar } from '@/components/ui/FilterBar';
 import { Freshness } from '@/components/ui/Freshness';
 import { Panel } from '@/components/ui/Panel';
 import { Select } from '@/components/ui/Select';
 import { LoadingBlock } from '@/components/ui/Skeleton';
 import { SimulatedBadge } from '@/components/ui/Badge';
 import { DashboardKpis } from '@/components/dashboard/DashboardKpis';
-import { DistributionCharts, TrendCharts } from '@/components/dashboard/DashboardCharts';
-import { PendingMaintenanceTable, RecentAlertsTable, TransformerStatusTable } from '@/components/dashboard/DashboardTables';
+import { FaultFrequencyChart, HealthDistributionChart, TrendCharts } from '@/components/dashboard/DashboardCharts';
+import { AttentionList, PendingMaintenanceList, RecentAlertsList } from '@/components/dashboard/DashboardTables';
+import { TimeRangeFilter } from '@/components/dashboard/TimeRangeFilter';
 import { SimulationPanel } from '@/components/simulation/SimulationPanel';
 import { statusLabel, TRANSFORMER_STATUSES } from '@/utils/labels';
 
@@ -37,11 +40,35 @@ function useDashboardFilters(): [DashboardFilters, ReturnType<typeof useUrlState
   return [filters, set];
 }
 
+/** Manually refetches every dashboard query plus the fleet list that feeds the attention table. */
+function useRefreshDashboard() {
+  const qc = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+  const refresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        qc.refetchQueries({ queryKey: qk.dashboard.all, type: 'active' }),
+        qc.refetchQueries({ queryKey: qk.transformers.everything, type: 'active' }),
+        qc.refetchQueries({ queryKey: qk.simulation, type: 'active' }),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+  return { refresh, refreshing };
+}
+
+function SectionLabel({ children }: { children: string }) {
+  return <h2 className="font-mono text-label uppercase text-fg-muted">{children}</h2>;
+}
+
 export default function DashboardPage() {
   const [filters, setFilters] = useDashboardFilters();
   const summary = useDashboardSummary(filters);
   const locations = useLocations();
   const { hash } = useLocation();
+  const { refresh, refreshing } = useRefreshDashboard();
 
   // Support /dashboard#simulation deep links (from the top-bar SIMULATED indicator).
   useEffect(() => {
@@ -50,23 +77,32 @@ export default function DashboardPage() {
     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [hash, summary.isSuccess]);
 
-  const hasFilters = Object.keys(filters).length > 0;
+  const activeCount = [filters.location, filters.status, filters.from || filters.to].filter(Boolean).length;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Network overview"
-        title="Dashboard"
-        meta={
+        className="!mb-0"
+        eyebrow="Network overview / Live monitoring"
+        title="Transformer Network"
+        description="Monitor the health and operational state of your transformer fleet."
+        actions={
           <>
             <SimulatedBadge />
             {summary.data && <Freshness at={summary.data.generatedAt} label="Updated" />}
+            <Button variant="secondary" icon={<RefreshCw />} loading={refreshing} onClick={() => void refresh()}>
+              Refresh
+            </Button>
           </>
         }
       />
 
-      <Panel bodyClassName="flex flex-wrap items-end gap-3 p-3">
-        <Field label="Location" className="w-full sm:w-48">
+      <FilterBar
+        label="Dashboard filters"
+        activeCount={activeCount}
+        onReset={() => setFilters({ location: undefined, status: undefined, from: undefined, to: undefined })}
+      >
+        <Field label="Location" className="w-full sm:w-44">
           <Select value={filters.location ?? ''} onChange={(e) => setFilters({ location: e.target.value })}>
             <option value="">All locations</option>
             {(locations.data ?? []).map((l) => (
@@ -76,7 +112,7 @@ export default function DashboardPage() {
             ))}
           </Select>
         </Field>
-        <Field label="Status" className="w-full sm:w-40">
+        <Field label="Status" className="w-full sm:w-36">
           <Select value={filters.status ?? ''} onChange={(e) => setFilters({ status: e.target.value })}>
             <option value="">All statuses</option>
             {TRANSFORMER_STATUSES.map((s) => (
@@ -86,21 +122,8 @@ export default function DashboardPage() {
             ))}
           </Select>
         </Field>
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <span className="font-mono text-label uppercase text-fg-muted">Time range</span>
-          <DateRangePicker value={{ from: filters.from, to: filters.to }} onChange={(r) => setFilters({ from: r.from, to: r.to })} />
-        </div>
-        {hasFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<X />}
-            onClick={() => setFilters({ location: undefined, status: undefined, from: undefined, to: undefined })}
-          >
-            Clear filters
-          </Button>
-        )}
-      </Panel>
+        <TimeRangeFilter value={{ from: filters.from, to: filters.to }} onChange={(r) => setFilters({ from: r.from, to: r.to })} />
+      </FilterBar>
 
       <section aria-label="Key metrics">
         {summary.isError && !summary.data ? (
@@ -113,33 +136,49 @@ export default function DashboardPage() {
             />
           </Panel>
         ) : (
-          <DashboardKpis summary={summary.data} loading={summary.isPending} />
+          <DashboardKpis summary={summary.data} loading={summary.isPending} location={filters.location} />
         )}
       </section>
 
-      <TrendCharts filters={filters} />
+      <section aria-label="Trends" className="flex flex-col gap-2">
+        <SectionLabel>Trends</SectionLabel>
+        <TrendCharts filters={filters} />
+      </section>
 
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-        {summary.isPending ? (
-          <>
-            <Panel title="Recent alerts">
-              <LoadingBlock lines={5} label="Loading recent alerts" />
-            </Panel>
-            <Panel title="Pending maintenance">
-              <LoadingBlock lines={5} label="Loading maintenance" />
-            </Panel>
-          </>
-        ) : summary.data ? (
-          <>
-            <RecentAlertsTable rows={summary.data.recentIncidents} />
-            <PendingMaintenanceTable rows={summary.data.recentMaintenance} />
-          </>
-        ) : null}
-      </div>
+      <section aria-label="Triage" className="flex flex-col gap-2">
+        <SectionLabel>Triage</SectionLabel>
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-12">
+          <div className="min-w-0 xl:col-span-7 [&>section]:h-full">
+            <AttentionList filters={filters} />
+          </div>
+          <div className="min-w-0 xl:col-span-5 [&>section]:h-full">
+            {summary.isPending ? (
+              <Panel title="Recent alerts">
+                <LoadingBlock lines={5} label="Loading recent alerts" />
+              </Panel>
+            ) : summary.data ? (
+              <RecentAlertsList rows={summary.data.recentIncidents} />
+            ) : null}
+          </div>
+        </div>
+      </section>
 
-      <TransformerStatusTable filters={filters} />
-
-      <DistributionCharts filters={filters} />
+      <section aria-label="Operations and distribution" className="flex flex-col gap-2">
+        <SectionLabel>Operations &amp; distribution</SectionLabel>
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="min-w-0 lg:col-span-2 xl:col-span-1 [&>section]:h-full">
+            {summary.isPending ? (
+              <Panel title="Pending maintenance">
+                <LoadingBlock lines={5} label="Loading maintenance" />
+              </Panel>
+            ) : summary.data ? (
+              <PendingMaintenanceList rows={summary.data.recentMaintenance} />
+            ) : null}
+          </div>
+          <HealthDistributionChart filters={filters} />
+          <FaultFrequencyChart filters={filters} />
+        </div>
+      </section>
 
       <SimulationPanel />
     </div>
