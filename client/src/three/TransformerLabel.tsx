@@ -14,6 +14,8 @@ export interface TransformerLabelProps {
   healthScore: number;
   /** Always visible (hovered, selected or faulted). */
   pinned?: boolean;
+  /** The selected transformer: drawn with an accent ring so it stands out from hovered/faulted labels. */
+  selected?: boolean;
   /** Fade window in camera distance: fully visible below `near`, hidden beyond `far`. */
   near?: number;
   far?: number;
@@ -31,6 +33,7 @@ function TransformerLabelImpl({
   status,
   healthScore,
   pinned = false,
+  selected = false,
   near = 18,
   far = 30,
   theme = 'dark',
@@ -62,8 +65,10 @@ function TransformerLabelImpl({
         aria-hidden="true"
         className={clsx(
           'flex select-none items-center gap-1.5 whitespace-nowrap rounded-sm border px-1.5 py-0.5 font-mono text-[10px] uppercase leading-4 tracking-[0.06em] shadow-sm',
-          light ? 'border-ink/20 bg-paper/95 text-ink' : 'border-line bg-panel/90 text-fg backdrop-blur-sm',
-          pinned && (light ? 'border-ink/60' : 'border-fg-muted'),
+          // Labels are light chips in both themes (the dark scene keeps its technical treatment around them).
+          light ? 'border-ink/20 bg-paper/95 text-ink' : 'border-line bg-panel/95 text-fg',
+          pinned && (light ? 'border-ink/60' : 'border-line-strong'),
+          selected && 'border-ink ring-2 ring-accent',
         )}
         style={{ transition: 'opacity 150ms linear' }}
       >

@@ -25,6 +25,7 @@ export interface GridNode {
 
 export const STATUS_ORDER: TransformerStatus[] = ['HEALTHY', 'WARNING', 'CRITICAL', 'OFFLINE'];
 
+/** Brighter variants of the token hues, for marks inside the dark 3D viewport. */
 const STATUS_HEX: Record<TransformerStatus, string> = {
   HEALTHY: '#5CBF78',
   WARNING: '#E8A33E',
@@ -32,12 +33,12 @@ const STATUS_HEX: Record<TransformerStatus, string> = {
   OFFLINE: '#80837A',
 };
 
-/** Slightly deeper variants that keep contrast on the light (#F2F0E9) landing background. */
+/** Light surfaces use the exact status tokens from tokens.css, so map marks match the UI chips. */
 const STATUS_HEX_LIGHT: Record<TransformerStatus, string> = {
-  HEALTHY: '#3E9E5A',
-  WARNING: '#C9821E',
-  CRITICAL: '#C2362F',
-  OFFLINE: '#80837A',
+  HEALTHY: '#27835B',
+  WARNING: '#A96B17',
+  CRITICAL: '#C83D37',
+  OFFLINE: '#6E7068',
 };
 
 export const ACCENT_HEX = '#C9F24A';

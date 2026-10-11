@@ -1,12 +1,15 @@
-import { Component, lazy, Suspense, useCallback, useMemo, useState, type ReactNode } from 'react';
+import { Component, lazy, Suspense, useCallback, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import clsx from 'clsx';
 import { AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
 import { useAllTransformers, useDashboardSummary, useLocations } from '@/hooks/useMonitoring';
 import { DetailPanel } from '@/three/DetailPanel';
 import { Grid2D } from '@/three/Grid2D';
-import { GridControls, GridLegend, GridStats, TransformerList, type RenderMode } from '@/three/GridHud';
+import { GridFilterBar, GridLegend, GridStats, GridViewControls, TransformerList, type RenderMode } from '@/three/GridHud';
 import type { ViewMode } from '@/three/CameraRig';
-import { DEFAULT_FILTER, fromTransformer, matchesFilter, statsFromSummary, type GridFilter } from '@/three/utils';
+import { BASE_HEX, DEFAULT_FILTER, fromTransformer, matchesFilter, statsFromSummary, type GridFilter } from '@/three/utils';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Button } from '@/components/ui/Button';
 import { useRenderCapabilities } from '@/three/webgl';
 import type { TransformerStatus } from '@/types/api';
 
@@ -26,10 +29,25 @@ class SceneErrorBoundary extends Component<{ onError: () => void; children: Reac
   }
 }
 
+const LG_QUERY = '(min-width: 1024px)';
+const subscribeLg = (cb: () => void) => {
+  const mq = window.matchMedia?.(LG_QUERY);
+  mq?.addEventListener?.('change', cb);
+  return () => mq?.removeEventListener?.('change', cb);
+};
+/** True on lg+ screens, where the selection floats over the viewport instead of stacking under it. */
+function useIsLg() {
+  return useSyncExternalStore(
+    subscribeLg,
+    () => window.matchMedia?.(LG_QUERY).matches ?? false,
+    () => false,
+  );
+}
+
 function Overlay({ children }: { children: ReactNode }) {
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center bg-canvas/70" role="status" aria-live="polite">
-      <span className="inline-flex items-center gap-2 font-mono text-label uppercase text-fg-muted">
+    <div className="absolute inset-0 z-[45] flex items-center justify-center" role="status" aria-live="polite">
+      <span className="inline-flex items-center gap-2 rounded-sm border border-line bg-panel px-3 py-2 font-mono text-label uppercase text-fg-muted">
         <Loader2 size={14} className="motion-safe:animate-spin" aria-hidden="true" />
         {children}
       </span>
@@ -39,6 +57,7 @@ function Overlay({ children }: { children: ReactNode }) {
 
 export default function GridPage() {
   const caps = useRenderCapabilities();
+  const isLg = useIsLg();
   const transformersQ = useAllTransformers();
   const summaryQ = useDashboardSummary();
   const locationsQ = useLocations();
@@ -130,13 +149,9 @@ export default function GridPage() {
         <AlertTriangle className="text-critical" size={22} aria-hidden="true" />
         <p className="text-sm text-fg">Could not load the transformer network.</p>
         <p className="max-w-sm text-xs text-fg-muted">{transformersQ.error?.message}</p>
-        <button
-          type="button"
-          onClick={() => transformersQ.refetch()}
-          className="inline-flex items-center gap-1.5 rounded-sm border border-line px-3 py-1.5 font-mono text-label uppercase text-fg hover:bg-raised"
-        >
-          <RefreshCw size={12} aria-hidden="true" /> Retry
-        </button>
+        <Button size="sm" variant="secondary" icon={<RefreshCw />} onClick={() => void transformersQ.refetch()}>
+          Retry
+        </Button>
       </div>
     );
   } else if (nodes.length === 0) {
@@ -185,87 +200,123 @@ export default function GridPage() {
         onClearSelection={clearSelection}
         highlightFaults={highlightFaults}
         reducedMotion={caps.reducedMotion}
-        theme="dark"
+        theme="light"
       />
     );
   }
 
   const hasData = nodes.length > 0;
+  // The 3D scene keeps its dark technical treatment inside a light frame; the 2D map and states are light.
+  const darkViewport = use3d && hasData && !transformersQ.isPending;
 
   return (
     // On lg the page fills the viewport left by the app shell (h-14 top bar + sm:py-6 main padding) so the
     // scene and side column share one height and the transformer list scrolls instead of overflowing.
-    <div className="flex flex-col gap-3 text-fg lg:h-[calc(100dvh-6.5rem)] lg:min-h-[640px]">
-      <header className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <p className="font-mono text-label uppercase text-fg-muted">Network</p>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-fg">Grid view</h1>
-        </div>
-        <p className="font-mono text-label uppercase text-fg-muted" aria-live="polite">
-          {transformersQ.isFetching ? 'Refreshing…' : 'Live · updates every 10 s'}
-        </p>
-      </header>
-
-      <GridStats stats={stats} visibleCount={hasData ? visibleNodes.length : undefined} />
-
-      <GridControls
-        filter={filter}
-        onFilterChange={setFilter}
-        locations={locations}
-        counts={counts}
-        highlightFaults={highlightFaults}
-        onHighlightFaults={setHighlightFaults}
-        viewMode={viewMode}
-        onViewMode={(m) => {
-          setViewMode(m);
-          setCameraToken((t) => t + 1);
-        }}
-        canIndividual={!!selected}
-        onResetCamera={resetCamera}
-        renderMode={use3d ? '3d' : '2d'}
-        onRenderMode={setRenderMode}
-        webglAvailable={caps.webgl && !sceneFailed}
+    <div className="flex flex-col text-fg lg:h-[calc(100dvh-6.5rem)] lg:min-h-[600px]">
+      <PageHeader
+        eyebrow="Overview / Network"
+        title="3D Network Grid"
+        actions={
+          <p className="inline-flex items-center gap-2 font-mono text-label uppercase text-fg-muted" aria-live="polite">
+            <span aria-hidden="true" className="h-1.5 w-1.5 bg-accent ring-1 ring-ink/40" />
+            {transformersQ.isFetching ? 'Refreshing…' : 'Live · updates every 10 s'}
+          </p>
+        }
       />
 
-      {(notice || unknownFocus) && (
-        <p role="status" className="rounded-sm border border-line bg-panel px-3 py-2 text-xs text-fg-muted">
-          {unknownFocus ? `Transformer "${selectedId}" was not found in the network. ` : ''}
-          {notice}
-        </p>
-      )}
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <GridStats stats={stats} visibleCount={hasData ? visibleNodes.length : undefined} />
 
-      <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="relative h-[60vh] min-h-[420px] overflow-hidden rounded border border-line bg-canvas lg:h-auto lg:min-h-0">
-          {viewport}
-          {hasData && (
-            <GridLegend className="pointer-events-none absolute bottom-2 left-2 right-2 sm:right-auto" />
-          )}
-          {caps.reducedMotion && use3d && (
-            <p className="pointer-events-none absolute right-2 top-2 rounded-sm bg-panel/90 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-fg-muted">
-              Reduced motion · animation paused
-            </p>
-          )}
+        <GridFilterBar
+          filter={filter}
+          onFilterChange={setFilter}
+          locations={locations}
+          counts={counts}
+          highlightFaults={highlightFaults}
+          onHighlightFaults={setHighlightFaults}
+          className="rounded-sm border border-line bg-panel px-3 py-2"
+        />
+
+        {(notice || unknownFocus) && (
+          <p role="status" className="rounded-sm border border-line bg-raised/60 px-3 py-2 text-xs text-fg-muted">
+            {unknownFocus ? `Transformer "${selectedId}" was not found in the network. ` : ''}
+            {notice}
+          </p>
+        )}
+
+        <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <section
+            aria-label="Network viewport"
+            className="flex min-h-0 flex-col overflow-hidden rounded-sm border border-line-strong bg-panel"
+          >
+            <div
+              className="relative h-[60vh] min-h-[420px] lg:h-auto lg:min-h-0 lg:flex-1"
+              style={darkViewport ? { backgroundColor: BASE_HEX } : undefined}
+            >
+              {viewport}
+              {/* Top-left: mode hint + camera/renderer controls. Top-right (lg): the floating selection panel. */}
+              <div className="pointer-events-none absolute left-2 top-2 z-50 flex max-w-[calc(100%-1rem)] flex-col items-start gap-1.5 lg:max-w-[calc(100%-21rem)]">
+                <GridViewControls
+                  viewMode={viewMode}
+                  onViewMode={(m) => {
+                    setViewMode(m);
+                    setCameraToken((t) => t + 1);
+                  }}
+                  canIndividual={!!selected}
+                  onResetCamera={resetCamera}
+                  renderMode={use3d ? '3d' : '2d'}
+                  onRenderMode={setRenderMode}
+                  webglAvailable={caps.webgl && !sceneFailed}
+                  className="pointer-events-auto"
+                />
+                <p
+                  className={clsx(
+                    'items-center gap-2 rounded-sm border border-line bg-panel/95 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-fg-muted',
+                    caps.reducedMotion && use3d ? 'inline-flex' : selected ? 'hidden 2xl:inline-flex' : 'hidden sm:inline-flex',
+                  )}
+                >
+                  <span className="text-fg">{use3d ? '3D view' : '2D map'}</span>
+                  <span aria-hidden="true">·</span>
+                  {caps.reducedMotion && use3d
+                    ? 'Reduced motion · animation paused'
+                    : use3d
+                      ? 'Drag to orbit · scroll to zoom'
+                      : 'Select a node for details'}
+                </p>
+              </div>
+              {selected && isLg && (
+                <DetailPanel
+                  transformer={selected}
+                  onClose={clearSelection}
+                  onFocus={use3d ? focusSelected : undefined}
+                  compact
+                  className="absolute right-2 top-2 z-[60] max-h-[calc(100%-1rem)] w-[19rem] overflow-y-auto overscroll-contain shadow-overlay"
+                />
+              )}
+            </div>
+            {hasData && <GridLegend className="shrink-0 border-t border-line px-3 py-2" />}
+          </section>
+
+          <aside aria-label="Selection and transformer list" className="flex min-h-0 flex-col gap-3 lg:overflow-hidden">
+            {selected && !isLg && (
+              <DetailPanel
+                transformer={selected}
+                onClose={clearSelection}
+                onFocus={use3d ? focusSelected : undefined}
+                className="shrink-0"
+              />
+            )}
+            {hasData && (
+              <TransformerList
+                nodes={visibleNodes}
+                selectedId={selectedId}
+                onSelect={select}
+                onHover={setHoveredId}
+                className="max-h-[26rem] min-h-[10rem] flex-1 lg:max-h-none"
+              />
+            )}
+          </aside>
         </div>
-
-        <aside className="flex min-h-0 flex-col gap-3 lg:overflow-hidden">
-          {selected && (
-            <DetailPanel
-              transformer={selected}
-              onClose={clearSelection}
-              onFocus={use3d ? focusSelected : undefined}
-              className="shrink-0"
-            />
-          )}
-          {hasData && (
-            <TransformerList
-              nodes={visibleNodes}
-              selectedId={selectedId}
-              onSelect={select}
-              onHover={setHoveredId}
-              className="max-h-[50vh] min-h-[10rem] flex-1 lg:max-h-none"
-            />
-          )}
-        </aside>
       </div>
     </div>
   );

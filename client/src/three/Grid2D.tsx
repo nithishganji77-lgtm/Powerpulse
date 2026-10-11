@@ -157,6 +157,8 @@ export function Grid2D({
             className="group"
             {...interactiveProps}
           >
+            {/* Selection halo: an accent disc behind the node, plus the ring below, so it never relies on color alone. */}
+            {selected && <circle r={R + 0.55} fill={ACCENT_HEX} opacity={0.7} />}
             {n.activeFaultCount > 0 && !dimmed && (
               <circle
                 r={R + 0.45}

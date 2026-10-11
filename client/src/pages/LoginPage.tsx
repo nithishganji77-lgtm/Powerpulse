@@ -50,13 +50,14 @@ export default function LoginPage() {
   const serverError = errors.root?.server?.message;
 
   return (
-    <AuthLayout aside="Sign in to monitor transformer health, triage alerts and coordinate maintenance across your network.">
-      <p className="font-mono text-label uppercase text-fg-muted">Operator access</p>
-      <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight">Sign in</h1>
+    <AuthLayout section="Operator access" aside="Sign in to monitor transformer health, triage alerts and coordinate maintenance across your network.">
+      <p className="font-mono text-label uppercase text-fg-muted">Account · Sign in</p>
+      <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Sign in</h1>
+      <p className="mt-1 text-sm text-fg-muted">Use the account your administrator created for you.</p>
 
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="mt-6 flex flex-col gap-4">
         {serverError && (
-          <div role="alert" className="flex items-start gap-2 rounded-sm border border-critical/50 bg-critical/10 px-3 py-2 text-sm text-critical">
+          <div role="alert" className="flex items-start gap-2 rounded-sm border border-critical/35 bg-critical-bg px-3 py-2 text-sm text-critical">
             <AlertOctagon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{serverError}</span>
           </div>
@@ -72,10 +73,10 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <div className="mt-8 border-t border-line pt-5 text-sm text-fg-muted">
+      <div className="mt-6 border-t border-line pt-5 text-sm text-fg-muted">
         <p>
           Just exploring?{' '}
-          <Link to="/demo" className="font-medium text-accent-ink hover:underline">
+          <Link to="/demo" className="font-medium text-fg underline decoration-line-strong underline-offset-4 hover:decoration-ink">
             Try the demo
           </Link>{' '}
           with simulated data.
