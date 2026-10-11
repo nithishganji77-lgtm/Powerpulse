@@ -79,4 +79,21 @@ describe('SettingsPage', () => {
     expect(screen.queryByRole('button', { name: /save settings/i })).not.toBeInTheDocument();
     expect(screen.getByLabelText('Temperature')).toBeDisabled();
   });
+
+  it('keeps every grouped section read-only for engineers', async () => {
+    await setup('ENGINEER');
+    for (const name of ['Monitoring thresholds', 'Sensor & recovery', 'Health score weights', 'Notifications', 'Locations', 'Simulation']) {
+      expect(screen.getByRole('region', { name })).toBeInTheDocument();
+    }
+    expect(screen.getByLabelText('Oil temperature warn')).toBeDisabled();
+    expect(screen.getByLabelText('Sensor timeout')).toBeDisabled();
+    expect(screen.getByLabelText('Upcoming inspection window')).toBeDisabled();
+    expect(screen.getByLabelText('Location 1')).toBeDisabled();
+    expect(screen.getByLabelText('Simulator enabled')).toBeDisabled();
+    expect(screen.getByText('Read-only', { selector: 'span' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /discard changes/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^add$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /remove location/i })).not.toBeInTheDocument();
+    expect(svc.update).not.toHaveBeenCalled();
+  });
 });

@@ -80,8 +80,45 @@ describe('AdminUsersPage', () => {
     const dialog = await screen.findByRole('dialog', { name: `Edit ${admin.name}` });
     await userEvent.selectOptions(within(dialog).getByLabelText(/role/i), 'ENGINEER');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }));
+    // Demoting an admin is a dangerous change: nothing is sent until it is confirmed.
+    expect(await within(dialog).findByText(/Change role from Admin to Engineer/)).toBeInTheDocument();
+    expect(svc.updateUser).not.toHaveBeenCalled();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Confirm and save' }));
     await waitFor(() => expect(svc.updateUser).toHaveBeenCalledWith(admin.id, { name: admin.name, role: 'ENGINEER', region: null, active: true }));
     expect(await within(dialog).findByText('Cannot remove the last active administrator')).toBeInTheDocument();
+  });
+
+  it('requires confirmation before deactivating a user from the table', async () => {
+    svc.updateUser.mockResolvedValue(makeUser('TECHNICIAN', { name: 'Tara Tech', active: false }));
+    renderWithProviders(<AdminUsersPage />, { route: '/admin/users', path: '/admin/users' });
+    await screen.findByText('Tara Tech');
+    // No deactivate action on your own row.
+    expect(screen.queryByRole('button', { name: `Deactivate ${admin.name}` })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Deactivate Tara Tech' }));
+    const confirm = await screen.findByRole('dialog', { name: 'Deactivate Tara Tech?' });
+    expect(svc.updateUser).not.toHaveBeenCalled();
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(svc.updateUser).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Deactivate Tara Tech' }));
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Deactivate user' }));
+    await waitFor(() => expect(svc.updateUser).toHaveBeenCalledWith(expect.any(String), { active: false }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('asks for confirmation when unchecking Active in the edit dialog', async () => {
+    svc.updateUser.mockResolvedValue(makeUser('TECHNICIAN', { name: 'Tara Tech', active: false }));
+    renderWithProviders(<AdminUsersPage />, { route: '/admin/users', path: '/admin/users' });
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit Tara Tech' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Edit Tara Tech' });
+    await userEvent.click(within(dialog).getByLabelText(/Active \(can sign in\)/));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }));
+    expect(await within(dialog).findByText(/Deactivate Tara Tech: they will no longer be able to sign in/)).toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Go back' }));
+    expect(svc.updateUser).not.toHaveBeenCalled();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Confirm and save' }));
+    await waitFor(() => expect(svc.updateUser).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ active: false })));
   });
 
   it('filters users by role and shows the audit log tab', async () => {

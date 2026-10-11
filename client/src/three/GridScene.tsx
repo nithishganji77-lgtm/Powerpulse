@@ -207,6 +207,7 @@ export default function GridScene({
                     status={n.status}
                     healthScore={n.healthScore}
                     pinned={hovered || selected || (labels === 'auto' && faulted)}
+                    selected={selected}
                     near={labelNear}
                     far={labelFar}
                     theme={theme}

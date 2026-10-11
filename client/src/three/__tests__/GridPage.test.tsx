@@ -113,6 +113,19 @@ describe('GridPage', () => {
     expect(screen.getByRole('region', { name: 'TX-003' })).toBeInTheDocument();
   });
 
+  it('renders the transformer list inside its own scroll container', () => {
+    renderPage();
+    const nav = screen.getByRole('navigation', { name: /Transformers on the grid/ });
+    const list = within(nav).getByRole('list');
+    // The list scrolls within the column; the column itself clips so the page never grows past the viewport.
+    expect(list).toHaveClass('overflow-y-auto', 'min-h-0', 'flex-1');
+    expect(nav).toHaveClass('min-h-0', 'overflow-hidden');
+    expect(within(list).getAllByRole('button')).toHaveLength(3);
+    const aside = screen.getByRole('complementary', { name: /Selection and transformer list/ });
+    expect(aside).toContainElement(nav);
+    expect(aside).toHaveClass('min-h-0', 'lg:overflow-hidden');
+  });
+
   it('filters by status', () => {
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: /^Critical/ }));

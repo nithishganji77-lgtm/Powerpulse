@@ -15,7 +15,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader eyebrow="Administration" title="Users & audit" description="Manage who can sign in and review every recorded change." />
+      <PageHeader eyebrow="System / Administration" title="Users & audit" description="Manage who can sign in and review every recorded change." />
       <Tabs
         label="Administration sections"
         tabs={[

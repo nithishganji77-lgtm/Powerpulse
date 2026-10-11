@@ -1,17 +1,19 @@
 import { useMemo, useState } from 'react';
+import { Download } from 'lucide-react';
 import { useUrlState } from '@/hooks/useUrlState';
 import { useDateRangeParam } from '@/hooks/useListUrlParams';
 import type { ReportFilters } from '@/types/api';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { SimulatedBadge } from '@/components/ui/Badge';
+import { buttonClasses } from '@/components/ui/Button';
 import { DateRangePicker, presetRange } from '@/components/ui/DateRangePicker';
-import { Panel } from '@/components/ui/Panel';
 import { CsvExportPanel } from '@/components/reports/CsvExportPanel';
 import {
   DowntimeSection,
   FaultFrequencySection,
   IncidentDurationSection,
   MaintenanceSection,
+  ReportSectionHeading,
   SummaryTiles,
   TransformerHealthSection,
 } from '@/components/reports/ReportSections';
@@ -37,38 +39,57 @@ export default function ReportsPage() {
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        eyebrow="Analysis"
+        eyebrow="Insights / Reports"
         title="Reports"
         description="Network health, incidents and maintenance performance for a period."
-        meta={<SimulatedBadge />}
+        meta={
+          <>
+            <SimulatedBadge />
+            <span className="tabular font-mono text-xs text-fg-muted">
+              <span className="sr-only">Reporting window: </span>
+              {formatDateTime(range.from)} → {range.to ? formatDateTime(range.to) : 'now'} · {location || 'All locations'}
+            </span>
+          </>
+        }
+        actions={
+          <a href="#csv-export" className={buttonClasses({ variant: 'secondary', size: 'md' })}>
+            <Download aria-hidden="true" className="h-4 w-4" />
+            Export CSV
+          </a>
+        }
       />
 
-      <Panel bodyClassName="flex flex-wrap items-end gap-4 p-3">
+      <section
+        aria-label="Report filters"
+        className="flex flex-col gap-3 rounded-sm border border-line bg-panel px-4 py-3 lg:flex-row lg:flex-wrap lg:items-end lg:gap-x-6"
+      >
         <div className="flex min-w-0 flex-col gap-1.5">
           <span className="font-mono text-label uppercase text-fg-muted">Period</span>
           <DateRangePicker value={range} onChange={setRange} allowClear={false} presets={['24h', '7d', '30d']} label="Report period" />
         </div>
+        <span aria-hidden="true" className="hidden h-12 w-px self-end bg-line lg:block" />
         <LocationFilter value={location ?? ''} onChange={(v) => set({ location: v })} className="w-full sm:w-56" allLabel="All locations" />
-        <p className="font-mono text-xs text-fg-muted">
-          {formatDateTime(range.from)} → {range.to ? formatDateTime(range.to) : 'now'}
-        </p>
-      </Panel>
+      </section>
 
       <SummaryTiles filters={filters} />
 
+      <ReportSectionHeading index="01" title="Faults & maintenance" />
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
         <FaultFrequencySection filters={filters} />
         <MaintenanceSection filters={filters} />
       </div>
 
+      <ReportSectionHeading index="02" title="Fleet condition" />
       <TransformerHealthSection filters={filters} />
 
+      <ReportSectionHeading index="03" title="Incidents & downtime" />
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
         <IncidentDurationSection filters={filters} />
         <DowntimeSection filters={filters} />
       </div>
 
-      <CsvExportPanel filters={filters} />
+      <ReportSectionHeading index="04" title="Exports" />
+      <CsvExportPanel filters={filters} id="csv-export" />
     </div>
   );
 }

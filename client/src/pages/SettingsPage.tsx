@@ -1,3 +1,4 @@
+import { Lock } from 'lucide-react';
 import { useSettings } from '@/hooks/useAdmin';
 import { useAuth } from '@/context/AuthContext';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -15,10 +16,16 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        eyebrow="Configuration"
+        eyebrow="System / Settings"
         title="Settings"
         description="Fault thresholds, health scoring, notifications, locations and simulator behaviour."
-        meta={!editable ? <Badge tone="steel">Read-only</Badge> : undefined}
+        meta={
+          !editable ? (
+            <Badge tone="neutral" icon={<Lock aria-hidden="true" />}>
+              Read-only
+            </Badge>
+          ) : undefined
+        }
       />
       {settings.isPending ? (
         <Panel>

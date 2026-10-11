@@ -24,9 +24,9 @@ const entityLabels = Object.fromEntries(ENTITY_TYPES.map((t) => [t, humanize(t)]
 const FILTER_KEYS = ['actor', 'entityType', 'action', 'from', 'to'];
 
 const columns: Column<AuditLogDto>[] = [
-  { key: 'at', header: 'Time', cell: (a) => <span className="font-mono text-xs">{formatDateTime(a.at)}</span> },
+  { key: 'at', header: 'Time', cell: (a) => <span className="tabular font-mono text-xs text-fg-muted">{formatDateTime(a.at)}</span> },
   { key: 'actor', header: 'Actor', rowHeader: true, cell: (a) => a.actorName },
-  { key: 'action', header: 'Action', cell: (a) => <span className="font-mono text-xs">{a.action}</span> },
+  { key: 'action', header: 'Action', cell: (a) => <span className="rounded-sm border border-line bg-raised/60 px-1.5 py-0.5 font-mono text-[11px] text-fg">{a.action}</span> },
   { key: 'entity', header: 'Entity type', cell: (a) => entityLabels[a.entityType] ?? a.entityType },
   {
     key: 'id',
@@ -72,7 +72,7 @@ export function AuditLogTab() {
 
   return (
     <div className="flex flex-col gap-3">
-      <Panel bodyClassName="grid grid-cols-2 gap-3 p-3 md:grid-cols-4">
+      <section aria-label="Audit filters" className="grid grid-cols-2 gap-3 rounded-sm border border-line bg-panel px-4 py-3 md:grid-cols-4">
         <Field label="Actor">
           <Input type="search" placeholder="Name" value={actor} onChange={(e) => setActor(e.target.value)} />
         </Field>
@@ -87,7 +87,7 @@ export function AuditLogTab() {
             {hasFilters && <ClearFiltersButton onClick={clear} />}
           </div>
         </div>
-      </Panel>
+      </section>
 
       <Panel flush>
         {list.isPending ? (

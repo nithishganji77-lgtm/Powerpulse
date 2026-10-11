@@ -36,6 +36,20 @@ import { links } from '@/utils/links';
 
 const chartLoading = <Skeleton className="h-60 w-full" />;
 
+/** Editorial section divider: mono index, hairline and a short title (mirrors the landing page's SectionIndex). */
+export function ReportSectionHeading({ index, title }: { index: string; title: string }) {
+  return (
+    <div className="mt-2 flex items-center gap-3 font-mono text-label uppercase text-fg-muted">
+      <span aria-hidden="true" className="tabular">
+        {index}
+      </span>
+      <span aria-hidden="true" className="h-px w-8 bg-line-strong" />
+      <h2 className="font-mono text-label font-medium uppercase text-fg">{title}</h2>
+      <span aria-hidden="true" className="h-px flex-1 bg-line" />
+    </div>
+  );
+}
+
 export function SummaryTiles({ filters }: { filters: ReportFilters }) {
   const q = useReportSummary(filters);
   if (q.isError && !q.data) {
@@ -49,15 +63,21 @@ export function SummaryTiles({ filters }: { filters: ReportFilters }) {
   const loading = q.isPending;
   return (
     <section aria-label="Report summary" className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-      <StatTile label="Transformers" value={formatNumber(s?.transformers)} loading={loading} />
-      <StatTile label="Average health" value={formatNumber(s?.averageHealth)} unit="/ 100" loading={loading} />
+      <StatTile label="Transformers" value={formatNumber(s?.transformers)} hint="in scope" loading={loading} />
+      <StatTile label="Average health" value={formatNumber(s?.averageHealth)} unit="/ 100" hint="health score" loading={loading} />
       <StatTile
         label="Incidents"
         value={formatNumber(s?.incidents)}
         hint={s ? `${formatNumber(s.resolvedIncidents)} resolved` : undefined}
         loading={loading}
       />
-      <StatTile label="Mean time to resolve" value={formatDuration(s?.meanTimeToResolveSeconds)} loading={loading} />
+      <StatTile
+        label="Time to resolve"
+        value={formatDuration(s?.meanTimeToResolveSeconds)}
+        hint="mean, resolved incidents"
+        title="Mean time to resolve"
+        loading={loading}
+      />
       <StatTile
         label="Maintenance"
         value={formatNumber(s?.maintenanceCreated)}
@@ -65,8 +85,10 @@ export function SummaryTiles({ filters }: { filters: ReportFilters }) {
         loading={loading}
       />
       <StatTile
-        label="High-risk transformers"
+        label="High-risk units"
         value={formatNumber(s?.highRiskTransformers)}
+        hint="health < 60 or critical alert"
+        title="High-risk transformers"
         tone={s && s.highRiskTransformers > 0 ? 'critical' : 'neutral'}
         icon={s && s.highRiskTransformers > 0 ? <AlertTriangle aria-hidden="true" /> : undefined}
         loading={loading}
@@ -78,7 +100,7 @@ export function SummaryTiles({ filters }: { filters: ReportFilters }) {
 export function FaultFrequencySection({ filters }: { filters: ReportFilters }) {
   const q = useReportFaultFrequency(filters);
   return (
-    <Panel title="Fault frequency" description="Faults raised per type in the selected range.">
+    <Panel title="Fault frequency" eyebrow="Count · per fault type" description="Faults raised per type in the selected range.">
       <QueryState
         query={q}
         isEmpty={(d: FaultFrequency[]) => d.every((f) => f.count === 0)}
@@ -123,9 +145,9 @@ function CountList<T>({ rows, label, render }: { rows: T[]; label: string; rende
           {rows.map((r, i) => {
             const [name, count] = render(r);
             return (
-              <li key={i} className="flex items-center justify-between gap-2 text-sm">
+              <li key={i} className="flex items-center justify-between gap-2 border-b border-line/60 pb-1.5 text-sm last:border-b-0 last:pb-0">
                 {name}
-                <span className="tabular font-mono text-xs">{formatNumber(count)}</span>
+                <span className="tabular font-mono text-xs text-fg">{formatNumber(count)}</span>
               </li>
             );
           })}
@@ -138,18 +160,25 @@ function CountList<T>({ rows, label, render }: { rows: T[]; label: string; rende
 export function MaintenanceSection({ filters }: { filters: ReportFilters }) {
   const q = useReportMaintenance(filters);
   return (
-    <Panel title="Maintenance" description="Tasks in the selected range.">
+    <Panel title="Maintenance" eyebrow="Tasks · selected range" description="Completion, status, priority and technician load.">
       <QueryState query={q}>
         {(m) => {
           const completed = m.completedOnTime + m.completedLate;
           const onTimePct = completed ? Math.round((m.completedOnTime / completed) * 100) : null;
           return (
             <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                <StatTile label="Completed on time" value={formatNumber(m.completedOnTime)} hint={onTimePct !== null ? `${onTimePct}% of completed` : undefined} tone="healthy" />
-                <StatTile label="Completed late" value={formatNumber(m.completedLate)} tone={m.completedLate > 0 ? 'warning' : 'neutral'} />
-                <StatTile label="Overdue (open)" value={formatNumber(m.overdueOpen)} tone={m.overdueOpen > 0 ? 'critical' : 'neutral'} />
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4">
                 <StatTile
+                  label="On time"
+                  title="Completed on time"
+                  value={formatNumber(m.completedOnTime)}
+                  hint={onTimePct !== null ? `${onTimePct}% of completed` : 'completed'}
+                  tone="healthy"
+                />
+                <StatTile label="Late" title="Completed late" value={formatNumber(m.completedLate)} hint="completed after due" tone={m.completedLate > 0 ? 'warning' : 'neutral'} />
+                <StatTile label="Overdue" title="Overdue (open)" value={formatNumber(m.overdueOpen)} hint="still open" tone={m.overdueOpen > 0 ? 'critical' : 'neutral'} />
+                <StatTile
+                  hint="per completed task"
                   label="Avg completion"
                   value={m.averageCompletionHours === null ? '—' : formatNumber(m.averageCompletionHours, 1)}
                   unit={m.averageCompletionHours === null ? undefined : 'h'}
@@ -225,7 +254,12 @@ export function TransformerHealthSection({ filters }: { filters: ReportFilters }
   const q = useReportTransformerHealth(filters);
   const { sorted, sort, setSort } = useClientSort(q.data, healthAccessors, { key: 'health', dir: 'asc' });
   return (
-    <Panel title="Transformer health" description="Lowest health first. High risk = health below 60 or an active critical alert." flush>
+    <Panel
+      title="Transformer health"
+      eyebrow="Health score · 0–100"
+      description="Lowest health first. High risk = health below 60 or an active critical alert."
+      flush
+    >
       <QueryState query={q} isEmpty={(d) => d.length === 0} empty={<EmptyState compact title="No transformers in scope" />} loading={<Skeleton className="m-4 h-40" />}>
         {() => (
           <Table caption="Transformer health report" columns={healthColumns} rows={sorted} getRowId={(r) => r.transformerId} sort={sort} onSortChange={setSort} dense maxHeight="28rem" />
@@ -245,9 +279,9 @@ const durationColumns: Column<IncidentDurationRow>[] = [
 export function IncidentDurationSection({ filters }: { filters: ReportFilters }) {
   const q = useReportIncidentDurations(filters);
   return (
-    <Panel title="Incident duration" description="Resolved incidents per fault type." flush>
+    <Panel title="Incident duration" eyebrow="Duration · resolved incidents" description="Resolved incidents per fault type." flush>
       <QueryState query={q} isEmpty={(d) => d.length === 0} empty={<EmptyState compact title="No resolved incidents in this range" />} loading={<Skeleton className="m-4 h-32" />}>
-        {(rows) => <Table dense caption="Incident duration by fault type" columns={durationColumns} rows={rows} getRowId={(r) => r.faultType} />}
+        {(rows) => <Table dense caption="Incident duration by fault type" columns={durationColumns} rows={rows} getRowId={(r) => r.faultType} maxHeight="20rem" />}
       </QueryState>
     </Panel>
   );
@@ -272,9 +306,9 @@ const downtimeColumns: Column<DowntimeRow>[] = [
 export function DowntimeSection({ filters }: { filters: ReportFilters }) {
   const q = useReportDowntime(filters);
   return (
-    <Panel title="Downtime" description="Offline incidents and total offline time per transformer." flush>
+    <Panel title="Downtime" eyebrow="Offline time · per transformer" description="Offline incidents and total offline time per transformer." flush>
       <QueryState query={q} isEmpty={(d) => d.length === 0} empty={<EmptyState compact title="No downtime in this range" />} loading={<Skeleton className="m-4 h-32" />}>
-        {(rows) => <Table dense caption="Downtime by transformer" columns={downtimeColumns} rows={rows} getRowId={(r) => r.transformerId} />}
+        {(rows) => <Table dense caption="Downtime by transformer" columns={downtimeColumns} rows={rows} getRowId={(r) => r.transformerId} maxHeight="20rem" />}
       </QueryState>
     </Panel>
   );

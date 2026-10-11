@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,6 +15,7 @@ import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { FormError } from '@/components/workflow/DetailBits';
 import { ROLES, roleLabel } from '@/utils/labels';
+import { InlineConfirm } from './AdminConfirm';
 
 const password = z
   .string()
@@ -55,6 +56,19 @@ export interface UserFormDialogProps {
   currentUserId?: string;
 }
 
+/** Higher = more privilege. Operator and Technician are peers. */
+const ROLE_RANK: Record<Role, number> = { ADMIN: 3, ENGINEER: 2, OPERATOR: 1, TECHNICIAN: 1 };
+
+/** Dangerous edits that need an explicit confirmation step before saving. */
+export function dangerousChanges(user: UserDto, v: Pick<Values, 'role' | 'active'>): string[] {
+  const out: string[] = [];
+  if (user.active && !v.active) out.push(`Deactivate ${user.name}: they will no longer be able to sign in.`);
+  if (ROLE_RANK[v.role as Role] < ROLE_RANK[user.role]) {
+    out.push(`Change role from ${roleLabel[user.role]} to ${roleLabel[v.role as Role]}: they lose ${roleLabel[user.role]} permissions.`);
+  }
+  return out;
+}
+
 function defaults(user?: UserDto | null): Values {
   return {
     name: user?.name ?? '',
@@ -79,11 +93,37 @@ export function UserFormDialog({ open, onClose, user, currentUserId }: UserFormD
     formState: { errors, isSubmitting },
   } = useForm<Values>({ resolver: zodResolver(editing ? editSchema : createSchema), defaultValues: defaults(user) });
 
+  // Values waiting for the confirmation step (deactivation or role demotion).
+  const [pending, setPending] = useState<Values | null>(null);
+
   useEffect(() => {
-    if (open) reset(defaults(user));
+    if (open) {
+      reset(defaults(user));
+      setPending(null);
+    }
   }, [open, user, reset]);
 
-  const submit = async (v: Values) => {
+  const onValid = (v: Values) => {
+    if (user && dangerousChanges(user, v).length > 0) {
+      setPending(v);
+      return;
+    }
+    return save(v);
+  };
+
+  const [confirming, setConfirming] = useState(false);
+  const confirmPending = async () => {
+    if (!pending) return;
+    setConfirming(true);
+    try {
+      await save(pending);
+    } finally {
+      setConfirming(false);
+      setPending(null);
+    }
+  };
+
+  const save = async (v: Values) => {
     try {
       if (user) {
         const body: UserUpdateRequest = {
@@ -129,10 +169,12 @@ export function UserFormDialog({ open, onClose, user, currentUserId }: UserFormD
       onClose={onClose}
       title={editing ? `Edit ${user?.name}` : 'Create user'}
       description={editing ? user?.email : 'New users can sign in immediately with this password.'}
-      dismissible={!isSubmitting}
+      dismissible={!isSubmitting && !confirming}
     >
-      <form noValidate onSubmit={handleSubmit(submit)} className="flex flex-col gap-3" aria-label={editing ? 'Edit user' : 'Create user'}>
+      <form noValidate onSubmit={handleSubmit(onValid)} className="flex flex-col gap-3" aria-label={editing ? 'Edit user' : 'Create user'}>
         <FormError message={errors.root?.server?.message} />
+        <fieldset disabled={!!pending} className="flex min-w-0 flex-col gap-3">
+          <legend className="sr-only">User details</legend>
         <Field label="Name" required error={errors.name?.message}>
           <Input autoComplete="off" {...register('name')} />
         </Field>
@@ -172,19 +214,42 @@ export function UserFormDialog({ open, onClose, user, currentUserId }: UserFormD
           <Input type="password" autoComplete="new-password" {...register('password')} />
         </Field>
         {editing && (
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" className="h-4 w-4 accent-[rgb(var(--accent))]" {...register('active')} />
-            Active (can sign in)
+          <label className="flex items-start gap-2 rounded-sm border border-line bg-raised/40 px-3 py-2 text-sm">
+            <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[rgb(var(--ink))]" {...register('active')} />
+            <span>
+              Active (can sign in)
+              <span className="block text-xs text-fg-muted">Unchecking deactivates the account after a confirmation step.</span>
+            </span>
           </label>
         )}
-        <div className="mt-2 flex justify-end gap-2 border-t border-line pt-4">
-          <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" loading={isSubmitting}>
-            {editing ? 'Save changes' : 'Create user'}
-          </Button>
-        </div>
+        </fieldset>
+        {!editing && (
+          <p className="text-xs text-fg-muted">
+            <span aria-hidden="true" className="text-accent-ink">
+              *
+            </span>{' '}
+            Required
+          </p>
+        )}
+        {pending && user ? (
+          <InlineConfirm
+            title="Confirm these changes"
+            items={dangerousChanges(user, pending)}
+            confirmLabel="Confirm and save"
+            onConfirm={() => void confirmPending()}
+            onBack={() => setPending(null)}
+            busy={confirming}
+          />
+        ) : (
+          <div className="mt-2 flex justify-end gap-2 border-t border-line pt-4">
+            <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" loading={isSubmitting}>
+              {editing ? 'Save changes' : 'Create user'}
+            </Button>
+          </div>
+        )}
       </form>
     </Dialog>
   );
