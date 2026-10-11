@@ -9,16 +9,18 @@
   --muted: 104 106 97;       /* #686A61 */
   --accent: 201 242 74;      /* #C9F24A */
   /* Semantic status — tuned for AA text contrast on the light surfaces. Never color-only. */
-  --warning: 169 107 23;     /* #A96B17 */
-  --critical: 200 61 55;     /* #C83D37 */
-  --healthy: 39 131 91;      /* #27835B */
-  --offline: 110 112 104;    /* #6E7068 */
+  --warning: 145 92 19;     /* #915C13 */
+  --critical: 188 57 51;    /* #BC3933 */
+  --healthy: 35 117 81;     /* #237551 */
+  --offline: 103 105 97;    /* #676961 */
   --healthy-bg: 229 242 232; /* #E5F2E8 */
   --warning-bg: 247 235 210; /* #F7EBD2 */
   --critical-bg: 247 228 224;/* #F7E4E0 */
   --offline-bg: 232 231 224; /* #E8E7E0 */
   /* Accent text/marks on light surfaces (lime itself is a fill, never text). */
   --accent-ink: 77 100 16;   /* #4D6410 */
+  /* Supporting blue (informational, e.g. SIMULATED markers); darkened from #7897B8 for text contrast on light. */
+  --steel: 79 108 141;       /* #4F6C8D */
 
   /* Application surfaces (light, shared with the landing page's warm neutrals) */
   --canvas: 242 240 233;     /* #F2F0E9 page */
